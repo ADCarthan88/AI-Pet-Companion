@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 import 'toy.dart';
+import 'pet_trick.dart';
+import 'pet_habitat.dart';
+import 'weather_system.dart';
+import 'mini_game.dart';
+import 'pet_social.dart';
 
 enum PetType { 
   dog, 
@@ -43,6 +48,11 @@ class Pet {
   DateTime lastBrushed;
   bool isLicking;
   Toy? currentToy;
+  List<PetTrick> tricks;
+  PetHabitat? habitat;
+  WeatherType preferredWeather;
+  List<MiniGame> unlockedGames;
+  PetSocialProfile? socialProfile;
 
   Pet({
     required this.name,
@@ -56,9 +66,47 @@ class Pet {
     this.currentActivity = PetActivity.idle,
     this.color = Colors.brown,
     this.isLicking = false,
+    String? socialId,
+    String? ownerName,
   }) : lastFed = DateTime.now(),
        lastCleaned = DateTime.now(),
-       lastBrushed = DateTime.now();
+       lastBrushed = DateTime.now(),
+       tricks = [],
+       unlockedGames = [],
+       preferredWeather = _getDefaultWeather(type) {
+    // Initialize habitat
+    habitat = PetHabitat(
+      petType: type,
+      theme: PetHabitat.getDefaultTheme(type),
+    );
+
+    // Initialize social profile if provided
+    if (socialId != null && ownerName != null) {
+      socialProfile = PetSocialProfile(
+        id: socialId,
+        ownerName: ownerName,
+        pet: this,
+      );
+    }
+
+    // Initialize available tricks
+    tricks.addAll(PetTrick.getTricksForPetType(type));
+  }
+
+  static WeatherType _getDefaultWeather(PetType type) {
+    switch (type) {
+      case PetType.lion:
+        return WeatherType.sunny;
+      case PetType.penguin:
+        return WeatherType.snowy;
+      case PetType.panda:
+        return WeatherType.rainy;
+      case PetType.giraffe:
+        return WeatherType.sunny;
+      default:
+        return WeatherType.sunny;
+    }
+  }
 
   void updateState() {
     final now = DateTime.now();
