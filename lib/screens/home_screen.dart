@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/pet.dart';
+import '../widgets/toy_selection_widget.dart';
 import 'pet_customization_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -97,6 +98,19 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       ),
       body: Column(
         children: [
+          ToySelectionWidget(
+            pet: currentPet,
+            onToySelected: (toy) {
+              setState(() {
+                if (currentPet.currentActivity == PetActivity.playingWithToy &&
+                    currentPet.currentToy == toy) {
+                  currentPet.stopPlayingWithToy();
+                } else {
+                  currentPet.playWithToy(toy);
+                }
+              });
+            },
+          ),
           // Pet selection
           if (pets.length > 1)
             SizedBox(

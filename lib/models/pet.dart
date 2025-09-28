@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'toy.dart';
 
 enum PetType { dog, cat, bird, rabbit }
 
@@ -6,6 +7,7 @@ enum PetMood { happy, neutral, sad, excited, tired, loving }
 
 enum PetActivity {
   playing,
+  playingWithToy,
   sleeping,
   eating,
   idle,
@@ -31,6 +33,7 @@ class Pet {
   DateTime lastCleaned;
   DateTime lastBrushed;
   bool isLicking;
+  Toy? currentToy;
 
   Pet({
     required this.name,
@@ -148,6 +151,60 @@ class Pet {
     } else {
       currentActivity = PetActivity.idle;
     }
+    updateState();
+  }
+
+  void playWithToy(Toy toy) {
+    if (!toy.suitableFor.contains(type)) {
+      // Pet doesn't like this type of toy
+      happiness = (happiness - 5).clamp(0, 100);
+      return;
+    }
+
+    toy.isInUse = true;
+    currentToy = toy;
+    energy = (energy - 15).clamp(0, 100);
+    happiness = (happiness + 30).clamp(0, 100); // Playing with appropriate toy gives more happiness
+    currentActivity = PetActivity.playingWithToy;
+    
+    // Add type-specific behaviors
+    switch (type) {
+      case PetType.dog:
+        if (toy.type == ToyType.ball) {
+          // Dogs get extra energy boost from playing with balls
+          energy = (energy + 5).clamp(0, 100);
+        }
+        break;
+      case PetType.cat:
+        if (toy.type == ToyType.laserPointer) {
+          // Cats get extra happiness from chasing laser pointers
+          happiness = (happiness + 5).clamp(0, 100);
+        }
+        break;
+      case PetType.bird:
+        if (toy.type == ToyType.bell) {
+          // Birds get extra happiness from musical toys
+          happiness = (happiness + 5).clamp(0, 100);
+        }
+        break;
+      case PetType.rabbit:
+        if (toy.type == ToyType.carrot) {
+          // Rabbits get both happiness and energy from carrot toys
+          happiness = (happiness + 5).clamp(0, 100);
+          energy = (energy + 5).clamp(0, 100);
+        }
+        break;
+    }
+    
+    updateState();
+  }
+
+  void stopPlayingWithToy() {
+    if (currentToy != null) {
+      currentToy!.isInUse = false;
+      currentToy = null;
+    }
+    currentActivity = PetActivity.idle;
     updateState();
   }
 }
