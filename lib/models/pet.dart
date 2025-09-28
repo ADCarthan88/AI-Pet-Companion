@@ -1,7 +1,16 @@
 import 'package:flutter/material.dart';
 import 'toy.dart';
 
-enum PetType { dog, cat, bird, rabbit }
+enum PetType { 
+  dog, 
+  cat, 
+  bird, 
+  rabbit,
+  lion,
+  giraffe,
+  penguin,
+  panda
+}
 
 enum PetMood { happy, neutral, sad, excited, tired, loving }
 
@@ -192,6 +201,34 @@ class Pet {
           // Rabbits get both happiness and energy from carrot toys
           happiness = (happiness + 5).clamp(0, 100);
           energy = (energy + 5).clamp(0, 100);
+        }
+        break;
+      case PetType.lion:
+        if (toy.type == ToyType.rope) {
+          // Lions gain extra energy and happiness from rope toys
+          energy = (energy + 10).clamp(0, 100);
+          happiness = (happiness + 10).clamp(0, 100);
+        }
+        break;
+      case PetType.giraffe:
+        if (toy.type == ToyType.leaves) {
+          // Giraffes are very content with leaves
+          happiness = (happiness + 15).clamp(0, 100);
+          hunger = (hunger - 5).clamp(0, 100);
+        }
+        break;
+      case PetType.penguin:
+        if (toy.type == ToyType.slide) {
+          // Penguins love sliding and gain lots of happiness
+          happiness = (happiness + 20).clamp(0, 100);
+          energy = (energy - 5).clamp(0, 100);
+        }
+        break;
+      case PetType.panda:
+        if (toy.type == ToyType.bamboo) {
+          // Pandas get both food and joy from bamboo
+          happiness = (happiness + 10).clamp(0, 100);
+          hunger = (hunger - 10).clamp(0, 100);
         }
         break;
     }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/pet.dart';
 import '../widgets/toy_selection_widget.dart';
-import 'pet_customization_screen.dart';
+import 'pet_store_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -61,8 +61,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => PetCustomizationScreen(
-          onPetCreated: (Pet newPet) {
+        builder: (context) => PetStoreScreen(
+          onPetSelected: (Pet newPet) {
             setState(() {
               pets.add(newPet);
               _selectedPetIndex = pets.length - 1;
