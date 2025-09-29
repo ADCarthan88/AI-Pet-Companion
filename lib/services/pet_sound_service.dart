@@ -1,5 +1,6 @@
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import '../models/pet.dart';
 
 class PetSoundService {
@@ -11,6 +12,13 @@ class PetSoundService {
 
   Future<void> playSound(String action) async {
     if (!_soundEnabled) return;
+    
+    // For web platform, we'll just use a silent approach for now
+    // since we're using placeholder audio files
+    if (kIsWeb) {
+      debugPrint('Playing sound: $action for ${pet.type} (web platform - sound disabled)');
+      return;
+    }
 
     // Get the appropriate sound file based on pet type and action
     final soundFile = _getSoundFileName(pet.type, action);
