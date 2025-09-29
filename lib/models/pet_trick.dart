@@ -22,14 +22,15 @@ class PetTrick {
     this.isUnlocked = false,
   });
 
-  double get masteryPercentage => 
-    (currentExperience / experienceToMaster).clamp(0.0, 1.0);
+  double get masteryPercentage =>
+      (currentExperience / experienceToMaster).clamp(0.0, 1.0);
 
   bool get isMastered => currentExperience >= experienceToMaster;
 
   static List<PetTrick> getTricksForPetType(PetType type) {
-    return allTricks.where((trick) => 
-      trick.compatiblePets.contains(type)).toList();
+    return allTricks
+        .where((trick) => trick.compatiblePets.contains(type))
+        .toList();
   }
 
   static final List<PetTrick> allTricks = [

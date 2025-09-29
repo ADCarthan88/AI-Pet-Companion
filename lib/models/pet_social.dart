@@ -21,11 +21,10 @@ class PetSocialProfile {
     List<String>? friendIds,
     DateTime? joinDate,
     this.socialScore = 0,
-  }) : 
-    masteredTricks = masteredTricks ?? [],
-    achievements = achievements ?? [],
-    friendIds = friendIds ?? [],
-    joinDate = joinDate ?? DateTime.now();
+  }) : masteredTricks = masteredTricks ?? [],
+       achievements = achievements ?? [],
+       friendIds = friendIds ?? [],
+       joinDate = joinDate ?? DateTime.now();
 
   Map<String, dynamic> toJson() {
     return {
@@ -69,9 +68,9 @@ class SocialEvent {
   }) : participantIds = participantIds ?? [];
 
   bool canJoin(Pet pet) {
-    return isActive && 
-           participantIds.length < maxParticipants &&
-           allowedPetTypes.contains(pet.type);
+    return isActive &&
+        participantIds.length < maxParticipants &&
+        allowedPetTypes.contains(pet.type);
   }
 
   void addParticipant(String profileId) {

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ai_pet_companion/screens/home_screen.dart';
-import 'package:ai_pet_companion/screens/pet_customization_screen.dart';
+import 'package:ai_pet_companion/screens/pet_store_screen.dart';
 import 'package:ai_pet_companion/models/pet.dart';
 
 void main() {
@@ -62,31 +62,39 @@ void main() {
   });
 
   group('Widget Tests', () {
-    testWidgets('Pet Customization Screen shows all elements', (
+    testWidgets('Pet Store Screen shows all elements', (
       WidgetTester tester,
     ) async {
       await tester.pumpWidget(
-        MaterialApp(home: PetCustomizationScreen(onPetCreated: (Pet pet) {})),
+        MaterialApp(home: PetStoreScreen(onPetSelected: (Pet pet) {})),
       );
 
-      expect(find.text('Customize Your Pet'), findsOneWidget);
+      expect(
+        find.textContaining('Loyal and playful companion'),
+        findsOneWidget,
+      );
       expect(find.byType(TextField), findsOneWidget);
-      expect(find.text('Create Pet'), findsOneWidget);
+      expect(find.text('Try Playing'), findsOneWidget);
+      expect(find.text('Choose This Pet'), findsOneWidget);
     });
 
-    testWidgets('Home Screen shows pet customization on start', (
-      WidgetTester tester,
-    ) async {
-      await tester.runAsync(() async {
-        await tester.pumpWidget(const MaterialApp(home: HomeScreen()));
+    testWidgets(
+      'Home Screen shows loading then navigates to store when empty',
+      (WidgetTester tester) async {
+        await tester.runAsync(() async {
+          await tester.pumpWidget(const MaterialApp(home: HomeScreen()));
 
-        // Wait for the post-frame callback
-        await tester.pump();
-        await tester.pump(const Duration(milliseconds: 100));
+          // Initially shows loading indicator
+          expect(find.byType(CircularProgressIndicator), findsOneWidget);
 
-        // Since there are no pets, it should show the pet customization screen
-        expect(find.byType(PetCustomizationScreen), findsOneWidget);
-      });
-    });
+          // Wait for the post-frame callback
+          await tester.pump();
+          await tester.pumpAndSettle();
+
+          // Should navigate to PetStoreScreen
+          expect(find.byType(PetStoreScreen), findsOneWidget);
+        });
+      },
+    );
   });
 }

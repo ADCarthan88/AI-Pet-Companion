@@ -9,7 +9,7 @@ enum HabitatTheme {
   bambooGrove,
   mountain,
   desert,
-  ocean
+  ocean,
 }
 
 class HabitatItem {
@@ -32,8 +32,7 @@ class HabitatItem {
   });
 
   static List<HabitatItem> getItemsForPetType(PetType type) {
-    return allItems.where((item) => 
-      item.suitableFor.contains(type)).toList();
+    return allItems.where((item) => item.suitableFor.contains(type)).toList();
   }
 
   static final List<HabitatItem> allItems = [
@@ -87,10 +86,9 @@ class PetHabitat {
     required this.petType,
     required this.theme,
     List<HabitatItem>? items,
-  }) : 
-    items = items ?? [],
-    happiness = 50.0,
-    comfort = 50.0;
+  }) : items = items ?? [],
+       happiness = 50.0,
+       comfort = 50.0;
 
   void addItem(HabitatItem item) {
     if (item.suitableFor.contains(petType)) {
@@ -107,9 +105,8 @@ class PetHabitat {
   void _updateStats() {
     // Calculate happiness and comfort based on items
     happiness = 50.0 + (items.length * 5.0);
-    comfort = 50.0 + (items.where((item) => 
-      item.theme == theme).length * 10.0);
-    
+    comfort = 50.0 + (items.where((item) => item.theme == theme).length * 10.0);
+
     // Cap at 100
     happiness = happiness.clamp(0.0, 100.0);
     comfort = comfort.clamp(0.0, 100.0);

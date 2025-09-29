@@ -19,8 +19,7 @@ class MiniGame {
   });
 
   static List<MiniGame> getGamesForPetType(PetType type) {
-    return allGames.where((game) => 
-      game.playablePets.contains(type)).toList();
+    return allGames.where((game) => game.playablePets.contains(type)).toList();
   }
 
   static final List<MiniGame> allGames = [

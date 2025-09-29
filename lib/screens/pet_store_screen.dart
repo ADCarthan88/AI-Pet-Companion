@@ -5,26 +5,25 @@ import '../widgets/toy_selection_widget.dart';
 class PetStoreScreen extends StatefulWidget {
   final Function(Pet) onPetSelected;
 
-  const PetStoreScreen({
-    super.key,
-    required this.onPetSelected,
-  });
+  const PetStoreScreen({super.key, required this.onPetSelected});
 
   @override
   State<PetStoreScreen> createState() => _PetStoreScreenState();
 }
 
-class _PetStoreScreenState extends State<PetStoreScreen> with TickerProviderStateMixin {
+class _PetStoreScreenState extends State<PetStoreScreen>
+    with TickerProviderStateMixin {
   late TabController _tabController;
   Pet? _previewPet;
   final _nameController = TextEditingController();
-  
+
   final Map<PetType, String> petTypeDescriptions = {
     PetType.dog: 'Loyal and playful companion, great for active families.',
     PetType.cat: 'Independent and graceful, perfect for cozy homes.',
     PetType.bird: 'Cheerful and musical friend that brings life to any room.',
     PetType.rabbit: 'Gentle and quiet pet, ideal for calm environments.',
-    PetType.lion: 'Majestic and powerful, requires lots of space and attention.',
+    PetType.lion:
+        'Majestic and powerful, requires lots of space and attention.',
     PetType.giraffe: 'Gentle giant with a unique perspective on life.',
     PetType.penguin: 'Charming waddler that loves to swim and slide.',
     PetType.panda: 'Peaceful bamboo enthusiast, brings zen to your home.',
@@ -51,7 +50,9 @@ class _PetStoreScreenState extends State<PetStoreScreen> with TickerProviderStat
   void _createPreviewPet(PetType type) {
     setState(() {
       _previewPet = Pet(
-        name: _nameController.text.isEmpty ? 'Preview Pet' : _nameController.text,
+        name: _nameController.text.isEmpty
+            ? 'Preview Pet'
+            : _nameController.text,
         type: type,
         gender: PetGender.male,
         color: availableColors[type]!.first,
@@ -61,15 +62,19 @@ class _PetStoreScreenState extends State<PetStoreScreen> with TickerProviderStat
 
   @override
   Widget build(BuildContext context) {
+    print('DEBUG: PetStoreScreen build called');
     return Scaffold(
       appBar: AppBar(
         title: const Text('Pet Store'),
         bottom: TabBar(
           controller: _tabController,
           isScrollable: true,
-          tabs: PetType.values.map((type) => Tab(
-            text: type.toString().split('.').last.toUpperCase(),
-          )).toList(),
+          tabs: PetType.values
+              .map(
+                (type) =>
+                    Tab(text: type.toString().split('.').last.toUpperCase()),
+              )
+              .toList(),
           onTap: (index) => _createPreviewPet(PetType.values[index]),
         ),
       ),
@@ -85,70 +90,76 @@ class _PetStoreScreenState extends State<PetStoreScreen> with TickerProviderStat
           ),
           if (_previewPet != null) ...[
             Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    width: 200,
-                    height: 200,
-                    decoration: BoxDecoration(
-                      color: _previewPet!.color,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      _getPetIcon(_previewPet!.type),
-                      size: 100,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 32),
-                    child: TextField(
-                      controller: _nameController,
-                      decoration: const InputDecoration(
-                        labelText: 'Give your pet a name',
-                        border: OutlineInputBorder(),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 200,
+                      height: 200,
+                      decoration: BoxDecoration(
+                        color: _previewPet!.color,
+                        shape: BoxShape.circle,
                       ),
-                      onChanged: (value) => _createPreviewPet(_previewPet!.type),
+                      child: Icon(
+                        _getPetIcon(_previewPet!.type),
+                        size: 100,
+                        color: Colors.white,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  Wrap(
-                    spacing: 8,
-                    children: availableColors[_previewPet!.type]!.map((color) => 
-                      GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            _previewPet!.color = color;
-                          });
-                        },
-                        child: Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: color,
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: _previewPet!.color == color ? 
-                                Theme.of(context).primaryColor : Colors.grey,
-                              width: 2,
-                            ),
-                          ),
+                    const SizedBox(height: 16),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 32),
+                      child: TextField(
+                        controller: _nameController,
+                        decoration: const InputDecoration(
+                          labelText: 'Give your pet a name',
+                          border: OutlineInputBorder(),
                         ),
+                        onChanged: (value) =>
+                            _createPreviewPet(_previewPet!.type),
                       ),
-                    ).toList(),
-                  ),
-                  const SizedBox(height: 16),
-                  ToySelectionWidget(
-                    pet: _previewPet!,
-                    onToySelected: (toy) {
-                      setState(() {
-                        _previewPet!.playWithToy(toy);
-                      });
-                    },
-                  ),
-                ],
+                    ),
+                    const SizedBox(height: 16),
+                    Wrap(
+                      spacing: 8,
+                      children: availableColors[_previewPet!.type]!
+                          .map(
+                            (color) => GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  _previewPet!.color = color;
+                                });
+                              },
+                              child: Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  color: color,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: _previewPet!.color == color
+                                        ? Theme.of(context).primaryColor
+                                        : Colors.grey,
+                                    width: 2,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          )
+                          .toList(),
+                    ),
+                    const SizedBox(height: 16),
+                    ToySelectionWidget(
+                      pet: _previewPet!,
+                      onToySelected: (toy) {
+                        setState(() {
+                          _previewPet!.playWithToy(toy);
+                        });
+                      },
+                    ),
+                  ],
+                ),
               ),
             ),
             Padding(
@@ -156,18 +167,27 @@ class _PetStoreScreenState extends State<PetStoreScreen> with TickerProviderStat
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  ElevatedButton(
-                    onPressed: () {
-                      _previewPet!.play();
-                      setState(() {});
-                    },
-                    child: const Text('Try Playing'),
+                  Tooltip(
+                    message: _nameController.text.isEmpty
+                        ? 'Please enter a name for your pet first.'
+                        : '',
+                    child: ElevatedButton(
+                      onPressed: _nameController.text.isEmpty
+                          ? null
+                          : () {
+                              _previewPet!.play();
+                              setState(() {});
+                            },
+                      child: const Text('Try Playing'),
+                    ),
                   ),
                   ElevatedButton(
                     onPressed: () {
                       if (_nameController.text.isEmpty) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Please give your pet a name')),
+                          const SnackBar(
+                            content: Text('Please give your pet a name'),
+                          ),
                         );
                         return;
                       }

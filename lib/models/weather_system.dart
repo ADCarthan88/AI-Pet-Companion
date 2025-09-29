@@ -1,12 +1,7 @@
 import 'package:flutter/material.dart';
+import 'pet.dart';
 
-enum WeatherType {
-  sunny,
-  rainy,
-  snowy,
-  cloudy,
-  stormy
-}
+enum WeatherType { sunny, rainy, snowy, cloudy, stormy }
 
 class WeatherSystem {
   WeatherType currentWeather;

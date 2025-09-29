@@ -48,10 +48,7 @@ class ToySelectionWidget extends StatelessWidget {
                             width: 2,
                           ),
                         ),
-                        child: Icon(
-                          _getToyIcon(toy.type),
-                          color: Colors.white,
-                        ),
+                        child: Icon(_getToyIcon(toy.type), color: Colors.white),
                       ),
                       const SizedBox(height: 4),
                       Text(toy.name),
@@ -76,6 +73,14 @@ class ToySelectionWidget extends StatelessWidget {
         return Icons.notifications;
       case ToyType.carrot:
         return Icons.eco;
+      case ToyType.rope:
+        return Icons.line_weight;
+      case ToyType.leaves:
+        return Icons.park;
+      case ToyType.slide:
+        return Icons.waves;
+      case ToyType.bamboo:
+        return Icons.grass;
     }
   }
 }

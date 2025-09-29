@@ -2,10 +2,14 @@ import 'package:flutter/material.dart';
 import 'pet.dart';
 
 enum ToyType {
-  ball,         // For dogs
+  ball, // For dogs
   laserPointer, // For cats
-  bell,         // For birds
-  carrot,       // For rabbits
+  bell, // For birds
+  carrot, // For rabbits
+  rope, // For lions
+  leaves, // For giraffes
+  slide, // For penguins
+  bamboo, // For pandas
 }
 
 class Toy {
@@ -59,6 +63,42 @@ class Toy {
             name: 'Carrot Toy',
             color: Colors.orange,
             suitableFor: [PetType.rabbit],
+          ),
+        ];
+      case PetType.lion:
+        return [
+          Toy(
+            type: ToyType.rope,
+            name: 'Giant Rope',
+            color: Colors.brown,
+            suitableFor: [PetType.lion],
+          ),
+        ];
+      case PetType.giraffe:
+        return [
+          Toy(
+            type: ToyType.leaves,
+            name: 'Acacia Leaves',
+            color: Colors.green,
+            suitableFor: [PetType.giraffe],
+          ),
+        ];
+      case PetType.penguin:
+        return [
+          Toy(
+            type: ToyType.slide,
+            name: 'Ice Slide',
+            color: Colors.lightBlue,
+            suitableFor: [PetType.penguin],
+          ),
+        ];
+      case PetType.panda:
+        return [
+          Toy(
+            type: ToyType.bamboo,
+            name: 'Bamboo Stick',
+            color: Colors.lightGreen,
+            suitableFor: [PetType.panda],
           ),
         ];
     }

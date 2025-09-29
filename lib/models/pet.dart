@@ -5,17 +5,9 @@ import 'pet_habitat.dart';
 import 'weather_system.dart';
 import 'mini_game.dart';
 import 'pet_social.dart';
+import 'store_item.dart';
 
-enum PetType { 
-  dog, 
-  cat, 
-  bird, 
-  rabbit,
-  lion,
-  giraffe,
-  penguin,
-  panda
-}
+enum PetType { dog, cat, bird, rabbit, lion, giraffe, penguin, panda }
 
 enum PetMood { happy, neutral, sad, excited, tired, loving }
 
@@ -48,6 +40,8 @@ class Pet {
   DateTime lastBrushed;
   bool isLicking;
   Toy? currentToy;
+  double coins;
+  List<StoreItem> inventory;
   List<PetTrick> tricks;
   PetHabitat? habitat;
   WeatherType preferredWeather;
@@ -73,7 +67,9 @@ class Pet {
        lastBrushed = DateTime.now(),
        tricks = [],
        unlockedGames = [],
-       preferredWeather = _getDefaultWeather(type) {
+       preferredWeather = _getDefaultWeather(type),
+       coins = 0,
+       inventory = [] {
     // Initialize habitat
     habitat = PetHabitat(
       petType: type,
@@ -125,20 +121,34 @@ class Pet {
       lastCleaned = now.subtract(const Duration(hours: 4));
     }
 
-    // Update mood based on stats
+    // Update mood based on stats and award coins
     if (happiness > 75 && energy > 50 && cleanliness > 70) {
       mood = PetMood.loving;
       if (!isLicking && currentActivity == PetActivity.idle) {
         startLicking();
       }
+      // Bonus coins for excellent care
+      earnCoins(2.0);
     } else if (happiness > 75 && energy > 50) {
       mood = PetMood.happy;
+      // Small bonus for good care
+      earnCoins(1.0);
     } else if (hunger > 75 || cleanliness < 30) {
       mood = PetMood.sad;
     } else if (energy < 25) {
       mood = PetMood.tired;
     } else {
       mood = PetMood.neutral;
+      // Small reward for stable condition
+      earnCoins(0.5);
+    }
+
+    // Extra coins for consistent care
+    final timeSinceLastBrushed = now.difference(lastBrushed);
+    if (timeSinceLastFed.inHours < 4 &&
+        timeSinceLastCleaned.inHours < 8 &&
+        timeSinceLastBrushed.inHours < 12) {
+      earnCoins(1.0);
     }
   }
 
@@ -168,6 +178,39 @@ class Pet {
     happiness = (happiness + 15).clamp(0, 100);
     lastBrushed = DateTime.now();
     currentActivity = PetActivity.beingBrushed;
+    updateState();
+  }
+
+  bool canAfford(double price) {
+    return coins >= price;
+  }
+
+  void earnCoins(double amount) {
+    coins += amount;
+  }
+
+  bool purchaseItem(StoreItem item) {
+    if (!canAfford(item.price)) return false;
+    if (inventory.any((i) => i.id == item.id)) return false;
+
+    coins -= item.price;
+    inventory.add(item);
+    return true;
+  }
+
+  void useItem(StoreItem item) {
+    if (!inventory.contains(item)) return;
+
+    happiness = (happiness + item.happinessBoost).clamp(0, 100).toInt();
+    energy = (energy + item.energyBoost).clamp(0, 100).toInt();
+    cleanliness = (cleanliness + item.cleanlinessBoost).clamp(0, 100).toInt();
+
+    // Some items might be consumable and should be removed after use
+    if (item.category == ItemCategory.food ||
+        item.category == ItemCategory.treats) {
+      inventory.remove(item);
+    }
+
     updateState();
   }
 
@@ -211,6 +254,23 @@ class Pet {
     updateState();
   }
 
+  void practiceTrick(PetTrick trick) {
+    if (!tricks.contains(trick)) return;
+    if (energy < 10) return;
+
+    energy = (energy - 10).clamp(0, 100);
+    trick.currentExperience += 10;
+
+    if (trick.isMastered && !trick.isUnlocked) {
+      trick.isUnlocked = true;
+      happiness = (happiness + 20).clamp(0, 100);
+    } else {
+      happiness = (happiness + 5).clamp(0, 100);
+    }
+
+    updateState();
+  }
+
   void playWithToy(Toy toy) {
     if (!toy.suitableFor.contains(type)) {
       // Pet doesn't like this type of toy
@@ -221,9 +281,12 @@ class Pet {
     toy.isInUse = true;
     currentToy = toy;
     energy = (energy - 15).clamp(0, 100);
-    happiness = (happiness + 30).clamp(0, 100); // Playing with appropriate toy gives more happiness
+    happiness = (happiness + 30).clamp(
+      0,
+      100,
+    ); // Playing with appropriate toy gives more happiness
     currentActivity = PetActivity.playingWithToy;
-    
+
     // Add type-specific behaviors
     switch (type) {
       case PetType.dog:
@@ -280,7 +343,7 @@ class Pet {
         }
         break;
     }
-    
+
     updateState();
   }
 
