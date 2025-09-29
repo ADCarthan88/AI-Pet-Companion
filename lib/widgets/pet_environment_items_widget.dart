@@ -278,57 +278,295 @@ class PetEnvironmentItemsWidget extends StatelessWidget {
 
   Widget _buildWeatherItem(StoreItem weather) {
     final weatherColor = weather.selectedColor ?? Colors.lightBlue;
-
-    // Position based on item name
-    if (weather.name.toLowerCase().contains('umbrella')) {
+    final itemName = weather.name.toLowerCase();
+    
+    // Sun Umbrella
+    if (itemName.contains('umbrella')) {
       return Positioned(
         top: size * 0.1,
         right: size * 0.2,
         width: size * 0.3,
-        height: size * 0.3,
-        child: Column(
+        height: size * 0.4,
+        child: Stack(
+          alignment: Alignment.topCenter,
           children: [
+            // Umbrella top
             Container(
-              width: size * 0.25,
+              width: size * 0.28,
               height: size * 0.15,
               decoration: BoxDecoration(
                 color: weatherColor,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(size * 0.15),
-                  topRight: Radius.circular(size * 0.15),
-                  bottomLeft: Radius.circular(size * 0.15),
-                  bottomRight: Radius.circular(size * 0.15),
+                borderRadius: BorderRadius.circular(size * 0.15),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.2),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+            ),
+            
+            // Umbrella pole
+            Positioned(
+              top: size * 0.14,
+              child: Container(
+                width: size * 0.025,
+                height: size * 0.25,
+                decoration: BoxDecoration(
+                  color: Colors.grey[700],
+                  borderRadius: BorderRadius.circular(size * 0.01),
                 ),
               ),
             ),
-            Container(
-              width: size * 0.02,
-              height: size * 0.15,
-              color: Colors.grey[600],
+            
+            // Base
+            Positioned(
+              bottom: 0,
+              child: Container(
+                width: size * 0.1,
+                height: size * 0.02,
+                decoration: BoxDecoration(
+                  color: Colors.grey[800],
+                  borderRadius: BorderRadius.circular(size * 0.01),
+                ),
+              ),
             ),
           ],
         ),
       );
-    } else if (weather.name.toLowerCase().contains('coat') ||
-        weather.name.toLowerCase().contains('boots')) {
-      // Wearable weather items
+    } 
+    // Rain Coat
+    else if (itemName.contains('coat')) {
       return Positioned(
-        bottom: size * 0.25,
+        bottom: size * 0.3,
         right: size * 0.15,
-        width: size * 0.15,
-        height: size * 0.15,
-        child: Container(
-          decoration: BoxDecoration(
-            color: weatherColor.withOpacity(0.8),
-            borderRadius: BorderRadius.circular(size * 0.03),
-          ),
-          child: Center(
-            child: Icon(weather.icon, color: Colors.white, size: size * 0.08),
-          ),
+        width: size * 0.2,
+        height: size * 0.25,
+        child: Stack(
+          children: [
+            // Coat body
+            Container(
+              width: size * 0.2,
+              height: size * 0.2,
+              decoration: BoxDecoration(
+                color: weatherColor,
+                borderRadius: BorderRadius.circular(size * 0.05),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.2),
+                    blurRadius: 2,
+                  ),
+                ],
+              ),
+            ),
+            
+            // Coat hood
+            Positioned(
+              top: 0,
+              right: size * 0.02,
+              child: Container(
+                width: size * 0.08,
+                height: size * 0.08,
+                decoration: BoxDecoration(
+                  color: weatherColor,
+                  borderRadius: BorderRadius.circular(size * 0.04),
+                ),
+              ),
+            ),
+            
+            // Buttons
+            Positioned(
+              top: size * 0.08,
+              left: size * 0.1,
+              child: Column(
+                children: [
+                  Container(
+                    width: size * 0.02,
+                    height: size * 0.02,
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  SizedBox(height: size * 0.02),
+                  Container(
+                    width: size * 0.02,
+                    height: size * 0.02,
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       );
-    } else {
-      // Default for other weather items
+    } 
+    // Winter Boots
+    else if (itemName.contains('boots')) {
+      return Positioned(
+        bottom: size * 0.05,
+        left: size * 0.7,
+        child: Row(
+          children: [
+            _buildBoot(weatherColor),
+            SizedBox(width: size * 0.02),
+            _buildBoot(weatherColor),
+          ],
+        ),
+      );
+    } 
+    // Storm Shelter
+    else if (itemName.contains('shelter')) {
+      return Positioned(
+        bottom: size * 0.05,
+        right: size * 0.1,
+        width: size * 0.3,
+        height: size * 0.25,
+        child: Stack(
+          children: [
+            // Shelter base
+            Container(
+              width: size * 0.3,
+              height: size * 0.2,
+              decoration: BoxDecoration(
+                color: weatherColor,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(size * 0.1),
+                  topRight: Radius.circular(size * 0.1),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.3),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+            ),
+            // Door
+            Positioned(
+              bottom: 0,
+              left: size * 0.1,
+              child: Container(
+                width: size * 0.1,
+                height: size * 0.15,
+                decoration: BoxDecoration(
+                  color: _getDarkerColor(weatherColor),
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(size * 0.05),
+                    topRight: Radius.circular(size * 0.05),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    } 
+    // Heated Igloo
+    else if (itemName.contains('igloo')) {
+      return Positioned(
+        bottom: size * 0.05,
+        left: size * 0.1,
+        width: size * 0.35,
+        height: size * 0.25,
+        child: Stack(
+          children: [
+            // Igloo dome
+            Container(
+              width: size * 0.35,
+              height: size * 0.25,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(size * 0.18),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 4,
+                  ),
+                ],
+              ),
+            ),
+            // Entrance
+            Positioned(
+              bottom: 0,
+              left: size * 0.12,
+              child: Container(
+                width: size * 0.12,
+                height: size * 0.12,
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.7),
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(size * 0.06),
+                    topRight: Radius.circular(size * 0.06),
+                  ),
+                ),
+              ),
+            ),
+            // Heating indicator
+            Positioned(
+              top: size * 0.05,
+              right: size * 0.05,
+              child: Container(
+                width: size * 0.05,
+                height: size * 0.05,
+                decoration: BoxDecoration(
+                  color: Colors.red.withOpacity(0.8),
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    } 
+    // Mist Generator
+    else if (itemName.contains('mist')) {
+      return Positioned(
+        bottom: size * 0.05,
+        right: size * 0.1,
+        width: size * 0.2,
+        height: size * 0.15,
+        child: Stack(
+          children: [
+            // Base
+            Container(
+              width: size * 0.2,
+              height: size * 0.1,
+              decoration: BoxDecoration(
+                color: weatherColor,
+                borderRadius: BorderRadius.circular(size * 0.05),
+              ),
+            ),
+            // Mist clouds
+            Positioned(
+              top: -size * 0.05,
+              left: 0,
+              right: 0,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: List.generate(3, (index) => 
+                  Container(
+                    width: size * 0.06,
+                    height: size * 0.06,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.8),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    } 
+    // Default for other weather items
+    else {
       return Positioned(
         bottom: size * 0.05,
         left: size * 0.05,
@@ -339,9 +577,20 @@ class PetEnvironmentItemsWidget extends StatelessWidget {
             color: weatherColor.withOpacity(0.7),
             borderRadius: BorderRadius.circular(size * 0.05),
             border: Border.all(color: _getDarkerColor(weatherColor), width: 2),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
           child: Center(
-            child: Icon(weather.icon, color: Colors.white, size: size * 0.15),
+            child: Icon(
+              weather.icon,
+              color: Colors.white,
+              size: size * 0.15,
+            ),
           ),
         ),
       );
@@ -423,5 +672,43 @@ class PetEnvironmentItemsWidget extends StatelessWidget {
 
   Color _getContrastColor(Color color) {
     return color.computeLuminance() > 0.5 ? Colors.black : Colors.white;
+  }
+  
+  // Helper method to build a boot for winter boots item
+  Widget _buildBoot(Color color) {
+    return Container(
+      width: size * 0.06,
+      height: size * 0.1,
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(size * 0.02),
+          topRight: Radius.circular(size * 0.02),
+          bottomLeft: Radius.circular(size * 0.01),
+          bottomRight: Radius.circular(size * 0.01),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 2,
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          Container(
+            height: size * 0.02,
+            decoration: BoxDecoration(
+              color: _getDarkerColor(color),
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(size * 0.01),
+                bottomRight: Radius.circular(size * 0.01),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
