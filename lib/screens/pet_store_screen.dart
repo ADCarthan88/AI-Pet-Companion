@@ -16,6 +16,8 @@ class _PetStoreScreenState extends State<PetStoreScreen>
   late TabController _tabController;
   Pet? _previewPet;
   final _nameController = TextEditingController();
+  final _nameFocusNode = FocusNode();
+  final Map<PetType, Color> _selectedColors = {};
 
   final Map<PetType, String> petTypeDescriptions = {
     PetType.dog: 'Loyal and playful companion, great for active families.',
@@ -44,18 +46,26 @@ class _PetStoreScreenState extends State<PetStoreScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: PetType.values.length, vsync: this);
+    for (var type in PetType.values) {
+      _selectedColors[type] = availableColors[type]!.first;
+    }
     _createPreviewPet(PetType.values.first);
+    // Auto-focus name field after build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _nameFocusNode.requestFocus();
+    });
   }
 
   void _createPreviewPet(PetType type) {
     setState(() {
+      final color = _selectedColors[type] ?? availableColors[type]!.first;
       _previewPet = Pet(
-        name: _nameController.text.isEmpty
+        name: _nameController.text.trim().isEmpty
             ? 'Preview Pet'
-            : _nameController.text,
+            : _nameController.text.trim(),
         type: type,
         gender: PetGender.male,
-        color: availableColors[type]!.first,
+        color: color,
       );
     });
   }
@@ -112,11 +122,15 @@ class _PetStoreScreenState extends State<PetStoreScreen>
                       padding: const EdgeInsets.symmetric(horizontal: 32),
                       child: TextField(
                         controller: _nameController,
+                        focusNode: _nameFocusNode,
                         decoration: const InputDecoration(
                           labelText: 'Give your pet a name',
                           border: OutlineInputBorder(),
                         ),
+                        textInputAction: TextInputAction.done,
                         onChanged: (value) =>
+                            _createPreviewPet(_previewPet!.type),
+                        onSubmitted: (_) =>
                             _createPreviewPet(_previewPet!.type),
                       ),
                     ),
@@ -128,6 +142,7 @@ class _PetStoreScreenState extends State<PetStoreScreen>
                             (color) => GestureDetector(
                               onTap: () {
                                 setState(() {
+                                  _selectedColors[_previewPet!.type] = color;
                                   _previewPet!.color = color;
                                 });
                               },
@@ -183,15 +198,24 @@ class _PetStoreScreenState extends State<PetStoreScreen>
                   ),
                   ElevatedButton(
                     onPressed: () {
-                      if (_nameController.text.isEmpty) {
+                      final name = _nameController.text.trim();
+                      if (name.isEmpty) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
                             content: Text('Please give your pet a name'),
                           ),
                         );
+                        _nameFocusNode.requestFocus();
                         return;
                       }
-                      widget.onPetSelected(_previewPet!);
+                      // Pass a new Pet instance to avoid reference issues
+                      final chosenPet = Pet(
+                        name: name,
+                        type: _previewPet!.type,
+                        gender: _previewPet!.gender,
+                        color: _previewPet!.color,
+                      );
+                      widget.onPetSelected(chosenPet);
                       Navigator.pop(context);
                     },
                     child: const Text('Choose This Pet'),
@@ -230,6 +254,7 @@ class _PetStoreScreenState extends State<PetStoreScreen>
   void dispose() {
     _tabController.dispose();
     _nameController.dispose();
+    _nameFocusNode.dispose();
     super.dispose();
   }
 }

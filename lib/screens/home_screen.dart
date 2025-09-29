@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/pet.dart';
 import '../widgets/toy_selection_widget.dart';
+import '../widgets/advanced_interactive_pet_widget.dart';
 import 'pet_store_screen.dart';
 import 'pet_supplies_store_screen.dart';
 import 'trick_training_screen.dart';
@@ -17,7 +18,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   List<Pet> pets = [];
   int _selectedPetIndex = 0;
   late AnimationController _lickingController;
-  late Animation<double> _lickingAnimation;
   bool _petStoreShown = false;
 
   Pet get currentPet => pets[_selectedPetIndex];
@@ -28,9 +28,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     _lickingController = AnimationController(
       duration: const Duration(milliseconds: 500),
       vsync: this,
-    );
-    _lickingAnimation = Tween<double>(begin: 1.0, end: 1.2).animate(
-      CurvedAnimation(parent: _lickingController, curve: Curves.easeInOut),
     );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (pets.isEmpty && !_petStoreShown) {
@@ -45,13 +42,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     if (mounted) {
       setState(() {
         for (final pet in pets) {
-          // You may want to implement updateState in your Pet model
-          // pet.updateState();
-          if (pet.currentActivity == PetActivity.licking) {
-            _lickingController.repeat(reverse: true);
-          } else {
-            _lickingController.stop();
-          }
+          // Update pet state
+          pet.updateState();
         }
       });
       Future.delayed(const Duration(seconds: 1), _periodicUpdate);
@@ -67,7 +59,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           print('DEBUG: Navigating to PetStoreScreen');
           return PetStoreScreen(
             onPetSelected: (Pet newPet) {
-              print('DEBUG: onPetSelected fired with pet: \\${newPet.name}, type: \\${newPet.type}');
+              print(
+                'DEBUG: onPetSelected fired with pet: \\${newPet.name}, type: \\${newPet.type}',
+              );
               setState(() {
                 pets.add(newPet);
                 _selectedPetIndex = pets.length - 1;
@@ -88,9 +82,16 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    print(
+      'DEBUG: HomeScreen build called. pets.length = \\${pets.length}, _selectedPetIndex = \\${_selectedPetIndex}',
+    );
     if (pets.isEmpty) {
+      print('DEBUG: pets is empty, showing loading indicator.');
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
+    print(
+      'DEBUG: Showing main menu for pet: \\${currentPet.name}, type: \\${currentPet.type}',
+    );
     return Scaffold(
       appBar: AppBar(
         title: Text('AI Pet Companion - ${currentPet.name}'),
@@ -98,12 +99,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           IconButton(
             icon: const Icon(Icons.shopping_cart),
             onPressed: () {
+              print('DEBUG: PetSuppliesStore icon pressed.');
               Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (context) => PetSuppliesStoreScreen(
                     pet: currentPet,
                     onItemPurchased: (item) {
+                      print('DEBUG: Item purchased: \\${item.name}');
                       setState(() {
                         currentPet.purchaseItem(item);
                       });
@@ -163,12 +166,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               ToySelectionWidget(
                 pet: currentPet,
                 onToySelected: (toy) {
+                  print('DEBUG: Toy selected: \\${toy.name}');
                   setState(() {
                     if (currentPet.currentActivity ==
                             PetActivity.playingWithToy &&
                         currentPet.currentToy == toy) {
+                      print('DEBUG: Stopping play with toy: \\${toy.name}');
                       currentPet.stopPlayingWithToy();
                     } else {
+                      print('DEBUG: Playing with toy: \\${toy.name}');
                       currentPet.playWithToy(toy);
                     }
                   });
@@ -214,58 +220,36 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    _buildStatusIndicator('Happiness', currentPet.happiness),
-                    _buildStatusIndicator('Energy', currentPet.energy),
-                    _buildStatusIndicator('Hunger', currentPet.hunger),
+                    Expanded(
+                      child: _buildStatusIndicator(
+                        'Happiness',
+                        currentPet.happiness,
+                      ),
+                    ),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: _buildStatusIndicator('Energy', currentPet.energy),
+                    ),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: _buildStatusIndicator('Hunger', currentPet.hunger),
+                    ),
                   ],
                 ),
               ),
               Expanded(
-                child: GestureDetector(
-                  onTapDown: (_) => setState(() {
-                    if (currentPet.mood == PetMood.happy ||
-                        currentPet.mood == PetMood.loving) {
-                      currentPet.startLicking();
-                    }
-                  }),
-                  child: Center(
-                    child: AnimatedBuilder(
-                      animation: _lickingAnimation,
-                      builder: (context, child) {
-                        return Transform.scale(
-                          scale:
-                              currentPet.currentActivity == PetActivity.licking
-                              ? _lickingAnimation.value
-                              : 1.0,
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                _getPetIcon(currentPet.type),
-                                size: 120,
-                                color: currentPet.color,
-                              ),
-                              const SizedBox(height: 16),
-                              Text(
-                                'Mood: ${currentPet.mood.toString().split('.').last}',
-                                style: Theme.of(
-                                  context,
-                                ).textTheme.headlineSmall,
-                              ),
-                              Text(
-                                'Activity: ${currentPet.currentActivity.toString().split('.').last}',
-                                style: Theme.of(context).textTheme.titleMedium,
-                              ),
-                              Text(
-                                'Cleanliness: ${currentPet.cleanliness}%',
-                                style: Theme.of(context).textTheme.titleMedium,
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-                  ),
+                child: AdvancedInteractivePetWidget(
+                  pet: currentPet,
+                  onTap: () {
+                    print('DEBUG: Pet tapped. mood = ${currentPet.mood}');
+                    setState(() {
+                      if (currentPet.mood == PetMood.happy ||
+                          currentPet.mood == PetMood.loving) {
+                        print('DEBUG: Starting licking animation.');
+                        currentPet.startLicking();
+                      }
+                    });
+                  },
                 ),
               ),
               Padding(
@@ -276,21 +260,27 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   alignment: WrapAlignment.center,
                   children: [
                     _buildActionButton('Feed', () {
+                      print('DEBUG: Feed button pressed.');
                       setState(() => currentPet.feed());
                     }),
                     _buildActionButton('Snack', () {
+                      print('DEBUG: Snack button pressed.');
                       setState(() => currentPet.feed(isSnack: true));
                     }),
                     _buildActionButton('Play', () {
+                      print('DEBUG: Play button pressed.');
                       setState(() => currentPet.play());
                     }),
                     _buildActionButton('Clean', () {
+                      print('DEBUG: Clean button pressed.');
                       setState(() => currentPet.clean());
                     }),
                     _buildActionButton('Brush', () {
+                      print('DEBUG: Brush button pressed.');
                       setState(() => currentPet.brush());
                     }),
                     _buildActionButton('Rest', () {
+                      print('DEBUG: Rest button pressed.');
                       setState(() => currentPet.rest());
                     }),
                   ],
