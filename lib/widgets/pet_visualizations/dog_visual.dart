@@ -29,6 +29,8 @@ class DogVisual extends StatelessWidget {
                 color: pet.color,
                 isBlinking: isBlinking,
                 mouthOpen: mouthOpen,
+                isLicking: pet.isLicking,
+                currentActivity: pet.currentActivity,
               ),
             ),
           ),
@@ -40,21 +42,86 @@ class DogVisual extends StatelessWidget {
               right: size * 0.2,
               child: Text('💤', style: TextStyle(fontSize: size * 0.2)),
             ),
+            
+          // Show licking animation
+          if (pet.isLicking && pet.currentActivity == PetActivity.licking)
+            Positioned(
+              bottom: size * 0.3,
+              left: size * 0.25,
+              child: _buildLickingAnimation(),
+            ),
         ],
       ),
     );
   }
+  
+  // Builds the licking animation with a small animated tongue
+  Widget _buildLickingAnimation() {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeInOut,
+      builder: (context, value, child) {
+        return CustomPaint(
+          size: Size(size * 0.2, size * 0.1),
+          painter: _TonguePainter(progress: value),
+        );
+      },
+    );
+  }
+}
+
+// Custom painter for the tongue animation
+class _TonguePainter extends CustomPainter {
+  final double progress;
+  
+  _TonguePainter({required this.progress});
+  
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.pinkAccent
+      ..style = PaintingStyle.fill;
+      
+    final path = Path();
+    
+    // Animated tongue extending and retracting
+    final extension = size.width * 0.7 * progress;
+    
+    path.moveTo(0, size.height * 0.5);
+    path.quadraticBezierTo(
+      extension * 0.5, 
+      size.height * (progress > 0.5 ? 0.1 : 0.9),
+      extension, 
+      size.height * 0.5
+    );
+    path.quadraticBezierTo(
+      extension * 0.5,
+      size.height * (progress > 0.5 ? 0.9 : 0.1),
+      0,
+      size.height * 0.5
+    );
+    
+    canvas.drawPath(path, paint);
+  }
+  
+  @override
+  bool shouldRepaint(_TonguePainter oldDelegate) => oldDelegate.progress != progress;
 }
 
 class DogPainter extends CustomPainter {
   final Color color;
   final bool isBlinking;
   final bool mouthOpen;
+  final bool isLicking;
+  final PetActivity currentActivity;
 
   DogPainter({
     required this.color,
     required this.isBlinking,
     required this.mouthOpen,
+    this.isLicking = false,
+    this.currentActivity = PetActivity.idle,
   });
 
   void _drawLeg(Canvas canvas, Size size, Offset position, Paint paint) {
@@ -84,6 +151,24 @@ class DogPainter extends CustomPainter {
           (HSLColor.fromColor(color).lightness + 0.1).clamp(0.0, 1.0),
         )
         .toColor();
+        
+    // Adjust posture based on current activity
+    double bodyTilt = 0.0;
+    
+    if (currentActivity == PetActivity.licking) {
+      // Slight tilt when licking paws
+      bodyTilt = 0.05;
+    } else if (currentActivity == PetActivity.playing) {
+      // More dynamic pose when playing
+      bodyTilt = 0.1;
+    }
+    
+    // Apply tilt by translating and rotating the canvas if needed
+    if (bodyTilt > 0) {
+      canvas.translate(size.width / 2, size.height / 2);
+      canvas.rotate(bodyTilt);
+      canvas.translate(-size.width / 2, -size.height / 2);
+    }
 
     final paint = Paint()
       ..color = dogColor
@@ -194,6 +279,28 @@ class DogPainter extends CustomPainter {
         size.height * 0.08,
       ),
       blackPaint,
+    );
+    
+    // Add body highlights using lightPaint
+    canvas.drawOval(
+      Rect.fromLTWH(
+        size.width * 0.25,
+        size.height * 0.48,
+        size.width * 0.2,
+        size.height * 0.15,
+      ),
+      lightPaint,
+    );
+    
+    // Add head highlights
+    canvas.drawOval(
+      Rect.fromLTWH(
+        size.width * 0.35,
+        size.height * 0.22,
+        size.width * 0.3,
+        size.height * 0.15,
+      ),
+      lightPaint,
     );
 
     // Left ear
@@ -311,6 +418,8 @@ class DogPainter extends CustomPainter {
   bool shouldRepaint(covariant DogPainter oldDelegate) {
     return oldDelegate.color != color ||
         oldDelegate.isBlinking != isBlinking ||
-        oldDelegate.mouthOpen != mouthOpen;
+        oldDelegate.mouthOpen != mouthOpen ||
+        oldDelegate.isLicking != isLicking ||
+        oldDelegate.currentActivity != currentActivity;
   }
 }
