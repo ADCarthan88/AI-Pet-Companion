@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/pet_habitat.dart';
 import '../models/pet.dart';
+import '../widgets/habitat_renderer.dart';
 
 class HabitatCustomizationScreen extends StatefulWidget {
   final Pet pet;
@@ -21,6 +22,7 @@ class _HabitatCustomizationScreenState
     extends State<HabitatCustomizationScreen> {
   late PetHabitat _habitat;
   late List<HabitatItem> _availableItems;
+  bool _showingStore = false;
 
   @override
   void initState() {
@@ -46,6 +48,20 @@ class _HabitatCustomizationScreenState
     });
   }
 
+  void _addInteractiveElement(String element) {
+    setState(() {
+      _habitat.addInteractiveElement(element);
+
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Added $element to the habitat!'),
+          duration: const Duration(seconds: 1),
+        ),
+      );
+    });
+  }
+
   Future<void> _showPurchaseDialog(HabitatItem item) async {
     return showDialog<void>(
       context: context,
@@ -63,12 +79,23 @@ class _HabitatCustomizationScreenState
             TextButton(
               child: const Text('Purchase'),
               onPressed: () {
-                // TODO: Implement currency system and check if user can afford item
-                setState(() {
-                  item.isOwned = true;
-                  _habitat.addItem(item);
-                });
-                Navigator.of(context).pop();
+                // Check if user can afford item
+                if (widget.pet.coins >= item.cost) {
+                  setState(() {
+                    widget.pet.coins -= item.cost.toInt();
+                    item.isOwned = true;
+                    _habitat.addItem(item);
+                  });
+                  Navigator.of(context).pop();
+                } else {
+                  Navigator.of(context).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Not enough coins to purchase this item!'),
+                      duration: Duration(seconds: 2),
+                    ),
+                  );
+                }
               },
             ),
           ],
@@ -81,8 +108,17 @@ class _HabitatCustomizationScreenState
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Customize Habitat'),
+        title: Text('${widget.pet.name}\'s Habitat'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.shopping_cart),
+            onPressed: () {
+              setState(() {
+                _showingStore = !_showingStore;
+              });
+            },
+            tooltip: 'Habitat Store',
+          ),
           IconButton(
             icon: const Icon(Icons.save),
             onPressed: () {
@@ -93,170 +129,142 @@ class _HabitatCustomizationScreenState
       ),
       body: Column(
         children: [
-          // Stats Display
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildStatIndicator('Happiness', _habitat.happiness),
-                _buildStatIndicator('Comfort', _habitat.comfort),
-              ],
-            ),
-          ),
-          // Habitat Preview
+          // Habitat Visualization
           Expanded(
             flex: 2,
-            child: Container(
-              margin: const EdgeInsets.all(16.0),
-              decoration: BoxDecoration(
-                color: _getThemeColor(_habitat.theme),
-                borderRadius: BorderRadius.circular(16.0),
-                border: Border.all(color: Colors.grey),
-              ),
-              child: Stack(
-                children: [
-                  // Habitat Items
-                  ..._habitat.items
-                      .map(
-                        (item) => Positioned(
-                          // TODO: Add proper positioning for items
-                          child: Icon(item.icon, size: 48, color: Colors.brown),
-                        ),
-                      )
-                      .toList(),
-                ],
-              ),
-            ),
+            child: HabitatRenderer(habitat: _habitat, pet: widget.pet),
           ),
-          // Available Items
-          Expanded(
-            flex: 3,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Text(
-                    'Available Items',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                ),
-                Expanded(
-                  child: GridView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: 16.0,
-                          mainAxisSpacing: 16.0,
-                          childAspectRatio: 1.5,
-                        ),
-                    itemCount: _availableItems.length,
-                    itemBuilder: (context, index) {
-                      final item = _availableItems[index];
-                      final bool isOwned = item.isOwned;
-                      final bool isInHabitat = _habitat.items.contains(item);
 
-                      return Card(
-                        child: InkWell(
-                          onTap: () {
-                            if (isInHabitat) {
-                              _removeItem(item);
-                            } else {
-                              _addItem(item);
-                            }
-                          },
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  item.icon,
-                                  size: 32,
-                                  color: isInHabitat ? Colors.blue : null,
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  item.name,
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontWeight: isInHabitat
-                                        ? FontWeight.bold
-                                        : null,
-                                  ),
-                                ),
-                                if (!isOwned)
-                                  Text(
-                                    '${item.cost} coins',
-                                    style: const TextStyle(color: Colors.green),
-                                  ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
+          // Either store or controls
+          Expanded(
+            flex: 1,
+            child: _showingStore ? _buildStoreView() : _buildControlsView(),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildStatIndicator(String label, double value) {
+  Widget _buildStoreView() {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
-        const SizedBox(height: 4),
-        Container(
-          width: 100,
-          height: 10,
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey),
-            borderRadius: BorderRadius.circular(5),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Text(
+            'Habitat Items for ${widget.pet.name}',
+            style: Theme.of(context).textTheme.titleMedium,
+            textAlign: TextAlign.center,
           ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(5),
-            child: LinearProgressIndicator(
-              value: value / 100,
-              backgroundColor: Colors.grey[200],
-              valueColor: AlwaysStoppedAnimation<Color>(
-                value > 70
-                    ? Colors.green
-                    : value > 30
-                    ? Colors.orange
-                    : Colors.red,
-              ),
-            ),
+        ),
+        Expanded(
+          child: ListView.builder(
+            itemCount: _availableItems.length,
+            itemBuilder: (context, index) {
+              final item = _availableItems[index];
+              final bool isOwned = _habitat.items.any(
+                (habitatItem) => habitatItem.name == item.name,
+              );
+
+              return ListTile(
+                leading: Icon(item.icon),
+                title: Text(item.name),
+                subtitle: Text(item.description),
+                trailing: isOwned
+                    ? const Icon(Icons.check, color: Colors.green)
+                    : Text('\$${item.cost.toInt()}'),
+                enabled: !isOwned && widget.pet.coins >= item.cost,
+                onTap: isOwned ? null : () => _addItem(item),
+              );
+            },
           ),
         ),
       ],
     );
   }
 
-  Color _getThemeColor(HabitatTheme theme) {
-    switch (theme) {
-      case HabitatTheme.jungle:
-        return Colors.green[100]!;
-      case HabitatTheme.savannah:
-        return Colors.orange[100]!;
-      case HabitatTheme.arctic:
-        return Colors.blue[50]!;
-      case HabitatTheme.forest:
-        return Colors.green[50]!;
-      case HabitatTheme.bambooGrove:
-        return Colors.lightGreen[50]!;
-      case HabitatTheme.mountain:
-        return Colors.grey[100]!;
-      case HabitatTheme.desert:
-        return Colors.orange[50]!;
-      case HabitatTheme.ocean:
-        return Colors.blue[100]!;
-    }
+  Widget _buildControlsView() {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            'Habitat Controls',
+            style: Theme.of(context).textTheme.titleMedium,
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _buildControlButton(
+                icon: Icons.water_drop,
+                label: 'Add Water',
+                onPressed: () {
+                  setState(() {
+                    _habitat.addWater();
+                  });
+                },
+              ),
+              _buildControlButton(
+                icon: Icons.restaurant,
+                label: 'Add Food',
+                onPressed: () {
+                  setState(() {
+                    _habitat.addFood();
+                  });
+                },
+              ),
+              _buildControlButton(
+                icon: Icons.cleaning_services,
+                label: 'Clean Habitat',
+                onPressed: () {
+                  setState(() {
+                    _habitat.clean();
+                  });
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _buildControlButton(
+                icon: Icons.toys,
+                label: 'Add Toy',
+                onPressed: () => _addInteractiveElement('toy'),
+              ),
+              _buildControlButton(
+                icon: Icons.sports_baseball,
+                label: 'Add Ball',
+                onPressed: () => _addInteractiveElement('ball'),
+              ),
+              _buildControlButton(
+                icon: Icons.extension,
+                label: 'Add Puzzle',
+                onPressed: () => _addInteractiveElement('puzzle'),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildControlButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onPressed,
+  }) {
+    return ElevatedButton.icon(
+      onPressed: onPressed,
+      icon: Icon(icon),
+      label: Text(label),
+      style: ElevatedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      ),
+    );
   }
 }

@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 import '../models/pet.dart';
+import '../models/pet_habitat.dart';
 import '../widgets/toy_selection_widget.dart';
 import '../widgets/advanced_interactive_pet_widget.dart';
 import '../widgets/pet_visualizations/pet_visualization_factory.dart';
+import '../widgets/pet_owned_items_widget.dart';
+import '../widgets/pet_environment_items_widget.dart';
 import 'pet_store_screen.dart';
 import 'pet_supplies_store_screen.dart';
 import 'trick_training_screen.dart';
+import 'habitat_customization_screen.dart';
+import 'weather_control_screen.dart';
 import 'package:ai_pet_companion/screens/_emotion_backdrop.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -128,6 +133,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       body: Stack(
         children: [
           Positioned.fill(child: EmotionBackdrop(mood: currentPet.mood)),
+          // Active item display in environment (when an item is selected)
+          if (currentPet.activeItem != null)
+            PetEnvironmentItemsWidget(
+              pet: currentPet,
+              size: MediaQuery.of(context).size.width,
+            ),
           Column(
             children: [
               SingleChildScrollView(
@@ -248,6 +259,24 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   ],
                 ),
               ),
+              // Display owned items that can be used
+              if (currentPet.ownedItems.isNotEmpty)
+                PetOwnedItemsWidget(
+                  pet: currentPet,
+                  activeItem: currentPet.activeItem,
+                  onItemSelected: (item) {
+                    setState(() {
+                      if (currentPet.activeItem != null &&
+                          currentPet.activeItem!.id == item.id) {
+                        // Tapping an active item removes it
+                        currentPet.clearActiveItem();
+                      } else {
+                        // Set the selected item as active
+                        currentPet.setActiveItem(item);
+                      }
+                    });
+                  },
+                ),
               Expanded(
                 child: AdvancedInteractivePetWidget(
                   pet: currentPet,
@@ -336,8 +365,43 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  void _showWeatherControl() {}
-  void _showHabitatCustomization() {}
+  void _showWeatherControl() {
+    // Initialize habitat if it doesn't exist
+    if (currentPet.habitat == null) {
+      currentPet.habitat = PetHabitat(petType: currentPet.type);
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => WeatherControlScreen(pet: currentPet),
+      ),
+    ).then((_) {
+      // Update pet state after returning from weather screen
+      setState(() {});
+    });
+  }
+
+  void _showHabitatCustomization() {
+    // Initialize habitat if it doesn't exist
+    if (currentPet.habitat == null) {
+      currentPet.habitat = PetHabitat(petType: currentPet.type);
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => HabitatCustomizationScreen(
+          pet: currentPet,
+          habitat: currentPet.habitat!,
+        ),
+      ),
+    ).then((_) {
+      // Update pet state after returning from habitat screen
+      setState(() {});
+    });
+  }
+
   void _showMiniGames() {}
   void _showSocialFeatures() {}
 

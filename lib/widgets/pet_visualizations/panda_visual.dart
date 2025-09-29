@@ -72,14 +72,22 @@ class PandaPainter extends CustomPainter {
       ..style = PaintingStyle.fill;
 
     // Draw the body
-    canvas.drawOval(
-      Rect.fromCenter(
-        center: Offset(center.dx, center.dy + radius * 0.6),
-        width: radius * 1.8,
-        height: radius * 1.6,
-      ),
-      bodyPaint,
+    final bodyRect = Rect.fromCenter(
+      center: Offset(center.dx, center.dy + radius * 0.6),
+      width: radius * 1.8,
+      height: radius * 1.6,
     );
+
+    // Fill the body
+    canvas.drawOval(bodyRect, bodyPaint);
+
+    // Add a light gray outline to make the body visible against white backgrounds
+    final bodyOutlinePaint = Paint()
+      ..color = Colors.grey.shade300
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.0;
+
+    canvas.drawOval(bodyRect, bodyOutlinePaint);
 
     // Black patches on body
     final blackPatch = Paint()
@@ -150,16 +158,31 @@ class PandaPainter extends CustomPainter {
       blackPatch,
     );
 
-    // Head (white circle)
+    // Head (white circle with outline)
     final headPaint = Paint()
       ..color = whiteColor
       ..style = PaintingStyle.fill;
 
+    // Draw the white filled head
     canvas.drawCircle(
       Offset(center.dx, center.dy - radius * 0.1),
       radius * 0.9,
       headPaint,
-    ); // Ears (black circles)
+    );
+
+    // Add a light gray outline to make the head visible against white backgrounds
+    final headOutlinePaint = Paint()
+      ..color = Colors.grey.shade300
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.0;
+
+    canvas.drawCircle(
+      Offset(center.dx, center.dy - radius * 0.1),
+      radius * 0.9,
+      headOutlinePaint,
+    );
+
+    // Ears (black circles)
     final earPaint = Paint()
       ..color = blackColor
       ..style = PaintingStyle.fill;

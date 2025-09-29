@@ -101,17 +101,48 @@ class _PetSuppliesStoreScreenState extends State<PetSuppliesStoreScreen>
           if (!item.isOwned)
             ElevatedButton(
               onPressed: () {
-                // TODO: Check if user has enough coins
-                setState(() {
-                  item.isOwned = true;
-                  if (_selectedColor != null) {
-                    item.selectedColor = _selectedColor;
+                if (widget.pet.canAfford(item.price)) {
+                  setState(() {
+                    if (_selectedColor != null) {
+                      item.selectedColor = _selectedColor;
+                    }
+                  });
+
+                  // Purchase the item and add it to the pet's owned items
+                  bool purchased = widget.pet.purchaseItem(item);
+
+                  if (purchased) {
+                    widget.onItemPurchased(item);
+                    Navigator.pop(context);
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          'Purchased ${item.name}! You can now use it from your inventory.',
+                        ),
+                        backgroundColor: Colors.green,
+                        action: SnackBarAction(
+                          label: 'Use Now',
+                          onPressed: () {
+                            widget.pet.setActiveItem(item);
+                          },
+                        ),
+                      ),
+                    );
                   }
-                });
-                widget.onItemPurchased(item);
-                Navigator.pop(context);
+                } else {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'Not enough coins to purchase ${item.name}!',
+                      ),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
               },
-              child: const Text('Purchase'),
+              child: Text('Purchase (${item.price.toInt()} coins)'),
             ),
         ],
       ),
@@ -214,6 +245,8 @@ class _PetSuppliesStoreScreenState extends State<PetSuppliesStoreScreen>
         return Icons.cake;
       case ItemCategory.healthCare:
         return Icons.healing;
+      case ItemCategory.weatherItems:
+        return Icons.wb_cloudy;
     }
   }
 }

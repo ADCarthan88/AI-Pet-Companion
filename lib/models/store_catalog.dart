@@ -21,6 +21,12 @@ class StoreCatalog {
     // Generate Grooming Items
     catalog.addAll(_generateGroomingItems());
 
+    // Generate Bed Items
+    catalog.addAll(_generateBedItems());
+
+    // Generate Weather-Related Items
+    catalog.addAll(_generateWeatherItems());
+
     return catalog;
   }
 
@@ -403,6 +409,162 @@ class StoreCatalog {
     ];
   }
 
+  static List<StoreItem> _generateBedItems() {
+    return [
+      // Basic beds - These will be available for free when a pet is selected
+      _createBedItem(
+        'basic_dog_bed',
+        'Basic Dog Bed',
+        'Simple cushion for your dog to rest on',
+        50,
+        [PetType.dog],
+        [Colors.brown[300]!, Colors.grey[400]!, Colors.blue[200]!],
+        10, // Low comfort boost
+      ),
+      _createBedItem(
+        'basic_cat_bed',
+        'Basic Cat Cushion',
+        'Small cushion for your cat',
+        50,
+        [PetType.cat],
+        [Colors.grey[300]!, Colors.orange[200]!, Colors.green[200]!],
+        10,
+      ),
+      _createBedItem(
+        'basic_bird_perch',
+        'Simple Perch',
+        'Basic wooden perch for your bird',
+        50,
+        [PetType.bird],
+        [Colors.brown[400]!],
+        10,
+      ),
+      _createBedItem(
+        'basic_rabbit_mat',
+        'Hay Mat',
+        'Simple mat for your rabbit to rest on',
+        50,
+        [PetType.rabbit],
+        [Colors.yellow[100]!],
+        10,
+      ),
+      _createBedItem(
+        'basic_lion_pad',
+        'Savannah Rest Pad',
+        'Basic pad for your lion to rest on',
+        50,
+        [PetType.lion],
+        [Colors.amber[200]!],
+        10,
+      ),
+      _createBedItem(
+        'basic_giraffe_mat',
+        'Giraffe Sleep Mat',
+        'Soft ground covering for your giraffe',
+        50,
+        [PetType.giraffe],
+        [Colors.amber[300]!],
+        10,
+      ),
+      _createBedItem(
+        'basic_penguin_nest',
+        'Simple Ice Nest',
+        'Basic nest for your penguin',
+        50,
+        [PetType.penguin],
+        [Colors.blue[100]!, Colors.white],
+        10,
+      ),
+      _createBedItem(
+        'basic_panda_mat',
+        'Bamboo Mat',
+        'Simple bamboo mat for your panda',
+        50,
+        [PetType.panda],
+        [Colors.green[200]!],
+        10,
+      ),
+
+      // Better quality beds available for purchase
+      _createBedItem(
+        'deluxe_dog_bed',
+        'Deluxe Dog Bed',
+        'Plush memory foam bed for optimal canine comfort',
+        250,
+        [PetType.dog],
+        [Colors.red[300]!, Colors.blue[400]!, Colors.purple[300]!],
+        30,
+      ),
+      _createBedItem(
+        'luxury_cat_tower',
+        'Luxury Cat Bed Tower',
+        'Elevated plush bed with scratching post',
+        300,
+        [PetType.cat],
+        [
+          Colors.grey[600]!,
+          Color(0xFFF5F5DC),
+          Colors.pink[100]!,
+        ], // Beige color
+        35,
+      ),
+      _createBedItem(
+        'premium_bird_swing',
+        'Premium Bird Swing Bed',
+        'Comfortable swing with soft lining for sleeping',
+        200,
+        [PetType.bird],
+        [Colors.green[400]!, Colors.yellow[400]!],
+        25,
+      ),
+      _createBedItem(
+        'bunny_burrow',
+        'Bunny Burrow Bed',
+        'Cozy hideaway with soft bedding',
+        225,
+        [PetType.rabbit],
+        [Colors.brown[200]!, Colors.green[100]!],
+        30,
+      ),
+      _createBedItem(
+        'royal_lion_platform',
+        'Royal Lion Platform',
+        'Elevated platform with soft padding fit for royalty',
+        400,
+        [PetType.lion],
+        [Colors.amber[600]!, Colors.brown[400]!],
+        40,
+      ),
+      _createBedItem(
+        'giraffe_sleep_stand',
+        'Giraffe Sleep Stand',
+        'Tall elevated platform with neck support',
+        450,
+        [PetType.giraffe],
+        [Colors.brown[500]!, Colors.amber[400]!],
+        40,
+      ),
+      _createBedItem(
+        'arctic_penguin_igloo',
+        'Arctic Penguin Igloo',
+        'Cozy igloo with temperature regulation',
+        350,
+        [PetType.penguin],
+        [Colors.white, Colors.blue[200]!],
+        35,
+      ),
+      _createBedItem(
+        'bamboo_panda_hammock',
+        'Bamboo Panda Hammock',
+        'Comfortable bamboo hammock for relaxed sleeping',
+        375,
+        [PetType.panda],
+        [Colors.green[500]!, Colors.brown[300]!],
+        40,
+      ),
+    ];
+  }
+
   // Helper methods to create items
   static StoreItem _createFoodItem(
     String id,
@@ -518,5 +680,129 @@ class StoreCatalog {
       happinessBoost: happinessBoost,
       cleanlinessBoost: cleanlinessBoost,
     );
+  }
+
+  static StoreItem _createBedItem(
+    String id,
+    String name,
+    String description,
+    double price,
+    List<PetType> suitableFor,
+    List<Color> colors,
+    double comfortBoost,
+  ) {
+    return StoreItem(
+      id: id,
+      name: name,
+      description: description,
+      price: price,
+      category: ItemCategory.beds,
+      suitableFor: suitableFor,
+      availableColors: colors,
+      icon: Icons.bed,
+      happinessBoost: comfortBoost / 2,
+      energyBoost: comfortBoost * 1.5, // Beds primarily boost energy recovery
+    );
+  }
+
+  // Helper method to create a weather item
+  static StoreItem _createWeatherItem(
+    String id,
+    String name,
+    String description,
+    double price,
+    List<PetType> suitableFor,
+    IconData icon,
+    List<Color> colors,
+  ) {
+    return StoreItem(
+      id: id,
+      name: name,
+      description: description,
+      price: price,
+      category: ItemCategory.weatherItems,
+      suitableFor: suitableFor,
+      availableColors: colors,
+      icon: icon,
+      happinessBoost: 10,
+      energyBoost: 5,
+    );
+  }
+
+  // Generate weather-related items
+  static List<StoreItem> _generateWeatherItems() {
+    return [
+      // Sun protection items
+      _createWeatherItem(
+        'sun_umbrella',
+        'Sun Umbrella',
+        'Keep your pet cool in sunny weather',
+        150.0,
+        [
+          PetType.dog,
+          PetType.cat,
+          PetType.rabbit,
+          PetType.lion,
+          PetType.giraffe,
+          PetType.panda,
+        ],
+        Icons.umbrella,
+        [Colors.blue[300]!, Colors.red[300]!, Colors.yellow[300]!],
+      ),
+
+      // Rain protection items
+      _createWeatherItem(
+        'rain_coat',
+        'Pet Rain Coat',
+        'Keep your pet dry in rainy weather',
+        200.0,
+        [PetType.dog, PetType.cat],
+        Icons.water,
+        [Colors.blue[400]!, Colors.yellow[400]!, Colors.green[400]!],
+      ),
+
+      // Snow items
+      _createWeatherItem(
+        'winter_boots',
+        'Pet Winter Boots',
+        'Protect paws from cold snow',
+        250.0,
+        [PetType.dog, PetType.cat],
+        Icons.ac_unit,
+        [Colors.blue[200]!, Colors.red[300]!],
+      ),
+
+      // Storm protection
+      _createWeatherItem(
+        'storm_shelter',
+        'Pet Storm Shelter',
+        'A safe place during stormy weather',
+        500.0,
+        [PetType.dog, PetType.cat, PetType.rabbit, PetType.bird],
+        Icons.home,
+        [Colors.grey[400]!, Colors.brown[300]!],
+      ),
+
+      // Weather-specific pet houses
+      _createWeatherItem(
+        'heated_igloo',
+        'Heated Igloo',
+        'Keeps your pet warm during cold weather',
+        800.0,
+        [PetType.penguin],
+        Icons.offline_bolt,
+        [Colors.white, Colors.blue[100]!],
+      ),
+
+      _createWeatherItem(
+        'mist_generator',
+        'Cool Mist Generator',
+        'Creates a cool misting environment for hot days',
+        600.0,
+        [PetType.panda, PetType.lion, PetType.giraffe],
+        Icons.cloud_outlined,
+        [Colors.blue[100]!],
+      ),
+    ];
   }
 }

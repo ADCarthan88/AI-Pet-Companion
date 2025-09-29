@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'pet.dart';
+import 'store_catalog.dart';
 
 // AppColors for custom colors not in Flutter's Colors class
 class AppColors {
@@ -20,6 +21,7 @@ enum ItemCategory {
   beds,
   treats,
   healthCare,
+  weatherItems,
 }
 
 class StoreItem {
@@ -200,17 +202,10 @@ class StoreItem {
 
   // Helper method to get all items for a specific pet type
   static List<StoreItem> getItemsForPet(PetType petType) {
-    List<StoreItem> allItems = [
-      ...foodItems,
-      ...toyItems,
-      ...furnitureItems,
-      ...accessoryItems,
-      ...groomingItems,
-    ];
+    // Import the store catalog to access all items including beds
+    var catalog = StoreCatalog.generateFullCatalog();
 
-    return allItems
-        .where((item) => item.suitableFor.contains(petType))
-        .toList();
+    return catalog.where((item) => item.suitableFor.contains(petType)).toList();
   }
 
   // Helper method to get items by category
