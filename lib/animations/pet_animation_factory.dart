@@ -10,7 +10,10 @@ import '../animations/penguin_animation.dart';
 import '../animations/panda_animation.dart';
 
 class PetAnimationFactory {
-  static Widget createPetAnimation(Pet pet, {required Function(PetActivity) onActivityChanged}) {
+  static Widget createPetAnimation(
+    Pet pet, {
+    required Function(PetActivity) onActivityChanged,
+  }) {
     switch (pet.type) {
       case PetType.dog:
         return DogAnimation(pet: pet, onActivityChanged: onActivityChanged);

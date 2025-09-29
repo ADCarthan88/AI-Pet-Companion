@@ -12,11 +12,13 @@ class PetSoundService {
 
   Future<void> playSound(String action) async {
     if (!_soundEnabled) return;
-    
+
     // For web platform, we'll just use a silent approach for now
     // since we're using placeholder audio files
     if (kIsWeb) {
-      debugPrint('Playing sound: $action for ${pet.type} (web platform - sound disabled)');
+      debugPrint(
+        'Playing sound: $action for ${pet.type} (web platform - sound disabled)',
+      );
       return;
     }
 

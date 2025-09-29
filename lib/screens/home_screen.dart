@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/pet.dart';
 import '../widgets/toy_selection_widget.dart';
 import '../widgets/advanced_interactive_pet_widget.dart';
+import '../widgets/pet_visualizations/pet_visualization_factory.dart';
 import 'pet_store_screen.dart';
 import 'pet_supplies_store_screen.dart';
 import 'trick_training_screen.dart';
@@ -202,7 +203,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(_getPetIcon(pet.type), color: pet.color),
+                              SizedBox(
+                                width: 40,
+                                height: 40,
+                                child:
+                                    PetVisualizationFactory.getPetVisualization(
+                                      pet: pet,
+                                      isBlinking: false,
+                                      mouthOpen: false,
+                                      size: 40,
+                                    ),
+                              ),
                               Text(
                                 pet.name,
                                 style: const TextStyle(fontSize: 12),
@@ -349,20 +360,5 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   Widget _buildActionButton(String label, VoidCallback onPressed) {
     return ElevatedButton(onPressed: onPressed, child: Text(label));
-  }
-
-  IconData _getPetIcon(PetType type) {
-    switch (type) {
-      case PetType.dog:
-        return Icons.pets;
-      case PetType.cat:
-        return Icons.catching_pokemon;
-      case PetType.bird:
-        return Icons.flutter_dash;
-      case PetType.rabbit:
-        return Icons.cruelty_free;
-      default:
-        return Icons.pets;
-    }
   }
 }
