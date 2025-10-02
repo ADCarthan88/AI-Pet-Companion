@@ -41,6 +41,10 @@ class _AdvancedInteractivePetWidgetState
   double _pullDistance = 0.0;
   bool _petHasToy = false;
   bool _showMoodBubble = false;
+  // Idle micro-animations
+  late AnimationController _idleMicroController;
+  double _headTilt = 0.0; // target tilt radians
+  bool _microActive = false;
 
   // Helper method to get appropriate icon for toy type
   IconData _getToyIcon(ToyType type) {
@@ -88,6 +92,18 @@ class _AdvancedInteractivePetWidgetState
     _setupToyInteractionTimer();
 
     _scheduleMoodBubble();
+    _idleMicroController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    )..addStatusListener((status) {
+        if (status == AnimationStatus.completed) {
+          _idleMicroController.reverse();
+        } else if (status == AnimationStatus.dismissed) {
+          _microActive = false;
+          _scheduleNextMicro();
+        }
+      });
+    _scheduleNextMicro();
   }
 
   // Setup a timer to update toy interactions
@@ -218,6 +234,7 @@ class _AdvancedInteractivePetWidgetState
   void dispose() {
     _animController.dispose();
     _breathingController.dispose();
+    _idleMicroController.dispose();
     super.dispose();
   }
 
@@ -237,6 +254,20 @@ class _AdvancedInteractivePetWidgetState
             _startBlinkingAnimation();
           }
         });
+      }
+    });
+  }
+
+  void _scheduleNextMicro() {
+    Future.delayed(Duration(seconds: 4 + math.Random().nextInt(6)), () {
+      if (!mounted) return;
+      if (_microActive) return;
+      if (widget.pet.currentActivity == PetActivity.idle) {
+        _microActive = true;
+        _headTilt = (math.Random().nextBool() ? 1 : -1) * 0.12;
+        _idleMicroController.forward(from: 0);
+      } else {
+        _scheduleNextMicro();
       }
     });
   }
@@ -270,11 +301,24 @@ class _AdvancedInteractivePetWidgetState
     }
 
     // Create the visualization widget
-    final visualization = PetVisualizationFactory.createVisualization(
+    final baseVisualization = PetVisualizationFactory.createVisualization(
       pet: widget.pet,
       size: petSize,
       isBlinking: _isBlinking,
       mouthOpen: _mouthOpen,
+    );
+
+    final visualization = AnimatedBuilder(
+      animation: _idleMicroController,
+      builder: (context, child) {
+        final factor = _microActive ? _idleMicroController.value : 0.0;
+        return Transform.rotate(
+          angle: _headTilt * factor,
+          alignment: Alignment.bottomCenter,
+          child: child,
+        );
+      },
+      child: baseVisualization,
     );
 
     return GestureDetector(
@@ -310,6 +354,27 @@ class _AdvancedInteractivePetWidgetState
                 ScaleTransition(
                   scale: _breathingAnimation,
                   child: visualization,
+                ),
+                // Mood-based light aura
+                Positioned(
+                  left: -petSize * 0.15,
+                  top: -petSize * 0.2,
+                  child: IgnorePointer(
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 700),
+                      width: petSize * 1.3,
+                      height: petSize * 1.3,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: RadialGradient(
+                          colors: [
+                            _moodColor(widget.pet.mood).withOpacity(0.55),
+                            Colors.transparent,
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
                 if (_showMoodBubble)
                   Positioned(

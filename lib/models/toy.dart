@@ -26,6 +26,7 @@ class Toy {
   bool isBeingPulledByUser = false;
   double pullStrength = 0.0; // 0.0 to 1.0, representing pull strength
   double wobbleAngle = 0.0; // For animating toy wobbling during tug-of-war
+  Offset velocity = Offset.zero; // Basic physics velocity
 
   Toy({
     required this.type,
@@ -69,6 +70,16 @@ class Toy {
     } else {
       wobbleAngle = 0.0;
     }
+  }
+
+  void applyPhysics() {
+    if (throwPosition == null) return;
+    velocity = Offset(velocity.dx * 0.94, velocity.dy * 0.94 + 0.18);
+    if (velocity.distance < 0.05) {
+      velocity = Offset.zero;
+      return;
+    }
+    throwPosition = throwPosition! + velocity;
   }
 
   static List<Toy> getToysForPetType(PetType petType) {
