@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:math' as math;
 import '../../models/pet.dart';
 
 class PenguinVisual extends StatelessWidget {
@@ -22,14 +23,42 @@ class PenguinVisual extends StatelessWidget {
       height: size,
       child: Stack(
         children: [
+          // Interactive layer to detect taps
+          Positioned.fill(
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                customBorder: const CircleBorder(),
+                onTap: () {
+                  // When tapped, provide visual feedback
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('${pet.name} feels happy!'),
+                      duration: const Duration(seconds: 1),
+                    ),
+                  );
+                },
+                splashColor: Colors.lightBlue.withOpacity(0.3),
+                child: Container(), // Empty container for tap detection
+              ),
+            ),
+          ),
+
           // Penguin body
           Positioned.fill(
-            child: CustomPaint(
-              painter: PenguinPainter(
-                color: pet.color,
-                isBlinking: isBlinking,
-                mouthOpen: mouthOpen,
-              ),
+            child: TweenAnimationBuilder<double>(
+              tween: Tween<double>(begin: 0.0, end: 1.0),
+              duration: const Duration(milliseconds: 500),
+              builder: (context, value, child) {
+                return CustomPaint(
+                  painter: PenguinPainter(
+                    color: pet.color,
+                    isBlinking: isBlinking,
+                    mouthOpen: mouthOpen,
+                    animationValue: value,
+                  ),
+                );
+              },
             ),
           ),
 
@@ -40,6 +69,15 @@ class PenguinVisual extends StatelessWidget {
               right: size * 0.2,
               child: Text('💤', style: TextStyle(fontSize: size * 0.2)),
             ),
+
+          // Add animation effects or status indicators
+          Positioned(
+            bottom: 0,
+            right: 0,
+            child: pet.currentActivity == PetActivity.playingWithToy
+                ? Icon(Icons.toys, color: Colors.blue, size: size * 0.2)
+                : SizedBox.shrink(),
+          ),
         ],
       ),
     );
@@ -50,11 +88,13 @@ class PenguinPainter extends CustomPainter {
   final Color color;
   final bool isBlinking;
   final bool mouthOpen;
+  final double animationValue;
 
   PenguinPainter({
     required this.color,
     required this.isBlinking,
     required this.mouthOpen,
+    this.animationValue = 0.0,
   });
 
   @override
@@ -97,15 +137,18 @@ class PenguinPainter extends CustomPainter {
 
     canvas.drawPath(bellyPath, bellyPaint);
 
-    // Wings (flippers)
+    // Wings (flippers) with animation
     final wingPaint = Paint()
       ..color = blackColor
       ..style = PaintingStyle.fill;
 
-    // Left wing
+    // Left wing with slight animation
     canvas.save();
     canvas.translate(center.dx - radius * 0.85, center.dy);
-    canvas.rotate(-0.2);
+    // Add a slight wave animation to the wings
+    final leftWingRotation =
+        -0.2 - (0.05 * math.sin(animationValue * math.pi * 2));
+    canvas.rotate(leftWingRotation);
     canvas.drawOval(
       Rect.fromCenter(
         center: Offset(0, 0),
@@ -116,10 +159,13 @@ class PenguinPainter extends CustomPainter {
     );
     canvas.restore();
 
-    // Right wing
+    // Right wing with slight animation
     canvas.save();
     canvas.translate(center.dx + radius * 0.85, center.dy);
-    canvas.rotate(0.2);
+    // Add a slight wave animation to the wings (opposite phase to left wing)
+    final rightWingRotation =
+        0.2 + (0.05 * math.sin(animationValue * math.pi * 2 + math.pi));
+    canvas.rotate(rightWingRotation);
     canvas.drawOval(
       Rect.fromCenter(
         center: Offset(0, 0),

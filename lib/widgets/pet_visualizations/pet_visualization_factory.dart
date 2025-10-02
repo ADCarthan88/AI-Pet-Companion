@@ -9,13 +9,16 @@ import 'giraffe_visual.dart';
 import 'penguin_visual.dart';
 import 'panda_visual.dart';
 
+/// Factory class for creating pet visualizations
 class PetVisualizationFactory {
-  static Widget getPetVisualization({
+  /// Creates a proper visualization for a pet based on its type
+  static Widget createVisualization({
     required Pet pet,
     required bool isBlinking,
     required bool mouthOpen,
     required double size,
   }) {
+    // Return the appropriate visualization widget based on the pet type
     switch (pet.type) {
       case PetType.dog:
         return DogVisual(
@@ -76,101 +79,20 @@ class PetVisualizationFactory {
     }
   }
 
-  // Helper method for animals we haven't created custom visuals for yet
-  static Widget _buildPlaceholderPet({
+  /// Backwards compatibility method with the original name
+  static Widget getPetVisualization({
     required Pet pet,
     required bool isBlinking,
     required bool mouthOpen,
     required double size,
-    required String petName,
-    required IconData icon,
   }) {
-    return SizedBox(
-      width: size,
-      height: size,
-      child: Stack(
-        children: [
-          // Center aligned icon
-          Center(
-            child: Icon(icon, size: size * 0.6, color: pet.color),
-          ),
-
-          // Pet name
-          Positioned(
-            bottom: size * 0.1,
-            left: 0,
-            right: 0,
-            child: Center(
-              child: Text(
-                petName,
-                style: TextStyle(
-                  fontSize: size * 0.12,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ),
-
-          // Eyes
-          if (!isBlinking)
-            Positioned(
-              top: size * 0.3,
-              left: 0,
-              right: 0,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    width: size * 0.1,
-                    height: size * 0.1,
-                    decoration: const BoxDecoration(
-                      color: Colors.black,
-                      shape: BoxShape.circle,
-                    ),
-                    margin: EdgeInsets.symmetric(horizontal: size * 0.05),
-                  ),
-                  Container(
-                    width: size * 0.1,
-                    height: size * 0.1,
-                    decoration: const BoxDecoration(
-                      color: Colors.black,
-                      shape: BoxShape.circle,
-                    ),
-                    margin: EdgeInsets.symmetric(horizontal: size * 0.05),
-                  ),
-                ],
-              ),
-            ),
-
-          // Mouth
-          Positioned(
-            top: size * 0.5,
-            left: 0,
-            right: 0,
-            child: Center(
-              child: Container(
-                width: size * 0.2,
-                height: mouthOpen ? size * 0.15 : size * 0.03,
-                decoration: BoxDecoration(
-                  color: mouthOpen ? Colors.black87 : Colors.transparent,
-                  border: mouthOpen
-                      ? null
-                      : Border.all(color: Colors.black87, width: 2),
-                  borderRadius: BorderRadius.circular(size * 0.1),
-                ),
-              ),
-            ),
-          ),
-
-          // Activity indicator
-          if (pet.currentActivity == PetActivity.sleeping)
-            Positioned(
-              top: size * 0.1,
-              right: size * 0.2,
-              child: Text('💤', style: TextStyle(fontSize: size * 0.2)),
-            ),
-        ],
-      ),
+    return createVisualization(
+      pet: pet,
+      isBlinking: isBlinking,
+      mouthOpen: mouthOpen,
+      size: size,
     );
   }
+
+  // No need for the _getPetTypeIcon method anymore since we're using custom visualizations
 }

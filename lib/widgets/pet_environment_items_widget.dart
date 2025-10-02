@@ -279,7 +279,7 @@ class PetEnvironmentItemsWidget extends StatelessWidget {
   Widget _buildWeatherItem(StoreItem weather) {
     final weatherColor = weather.selectedColor ?? Colors.lightBlue;
     final itemName = weather.name.toLowerCase();
-    
+
     // Sun Umbrella
     if (itemName.contains('umbrella')) {
       return Positioned(
@@ -306,7 +306,7 @@ class PetEnvironmentItemsWidget extends StatelessWidget {
                 ],
               ),
             ),
-            
+
             // Umbrella pole
             Positioned(
               top: size * 0.14,
@@ -319,7 +319,7 @@ class PetEnvironmentItemsWidget extends StatelessWidget {
                 ),
               ),
             ),
-            
+
             // Base
             Positioned(
               bottom: 0,
@@ -335,7 +335,7 @@ class PetEnvironmentItemsWidget extends StatelessWidget {
           ],
         ),
       );
-    } 
+    }
     // Rain Coat
     else if (itemName.contains('coat')) {
       return Positioned(
@@ -360,7 +360,7 @@ class PetEnvironmentItemsWidget extends StatelessWidget {
                 ],
               ),
             ),
-            
+
             // Coat hood
             Positioned(
               top: 0,
@@ -374,7 +374,7 @@ class PetEnvironmentItemsWidget extends StatelessWidget {
                 ),
               ),
             ),
-            
+
             // Buttons
             Positioned(
               top: size * 0.08,
@@ -404,7 +404,7 @@ class PetEnvironmentItemsWidget extends StatelessWidget {
           ],
         ),
       );
-    } 
+    }
     // Winter Boots
     else if (itemName.contains('boots')) {
       return Positioned(
@@ -418,7 +418,7 @@ class PetEnvironmentItemsWidget extends StatelessWidget {
           ],
         ),
       );
-    } 
+    }
     // Storm Shelter
     else if (itemName.contains('shelter')) {
       return Positioned(
@@ -466,7 +466,7 @@ class PetEnvironmentItemsWidget extends StatelessWidget {
           ],
         ),
       );
-    } 
+    }
     // Heated Igloo
     else if (itemName.contains('igloo')) {
       return Positioned(
@@ -523,7 +523,7 @@ class PetEnvironmentItemsWidget extends StatelessWidget {
           ],
         ),
       );
-    } 
+    }
     // Mist Generator
     else if (itemName.contains('mist')) {
       return Positioned(
@@ -549,8 +549,9 @@ class PetEnvironmentItemsWidget extends StatelessWidget {
               right: 0,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: List.generate(3, (index) => 
-                  Container(
+                children: List.generate(
+                  3,
+                  (index) => Container(
                     width: size * 0.06,
                     height: size * 0.06,
                     decoration: BoxDecoration(
@@ -564,7 +565,7 @@ class PetEnvironmentItemsWidget extends StatelessWidget {
           ],
         ),
       );
-    } 
+    }
     // Default for other weather items
     else {
       return Positioned(
@@ -586,11 +587,7 @@ class PetEnvironmentItemsWidget extends StatelessWidget {
             ],
           ),
           child: Center(
-            child: Icon(
-              weather.icon,
-              color: Colors.white,
-              size: size * 0.15,
-            ),
+            child: Icon(weather.icon, color: Colors.white, size: size * 0.15),
           ),
         ),
       );
@@ -673,7 +670,7 @@ class PetEnvironmentItemsWidget extends StatelessWidget {
   Color _getContrastColor(Color color) {
     return color.computeLuminance() > 0.5 ? Colors.black : Colors.white;
   }
-  
+
   // Helper method to build a boot for winter boots item
   Widget _buildBoot(Color color) {
     return Container(
@@ -688,10 +685,7 @@ class PetEnvironmentItemsWidget extends StatelessWidget {
           bottomRight: Radius.circular(size * 0.01),
         ),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.2),
-            blurRadius: 2,
-          ),
+          BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 2),
         ],
       ),
       child: Column(

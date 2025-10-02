@@ -33,26 +33,74 @@ class ToySelectionWidget extends StatelessWidget {
               final toy = availableToys[index];
               return Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: GestureDetector(
-                  onTap: () => onToySelected(toy),
-                  child: Column(
+                child: LongPressDraggable<Toy>(
+                  data: toy,
+                  feedback: Material(
+                    elevation: 4.0,
+                    shape: const CircleBorder(),
+                    child: Container(
+                      width: 60,
+                      height: 60,
+                      decoration: BoxDecoration(
+                        color: toy.color,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        _getToyIcon(toy.type),
+                        color: Colors.white,
+                        size: 30,
+                      ),
+                    ),
+                  ),
+                  childWhenDragging: Column(
                     children: [
                       Container(
                         width: 50,
                         height: 50,
                         decoration: BoxDecoration(
-                          color: toy.color,
+                          color: toy.color.withOpacity(0.5),
                           shape: BoxShape.circle,
-                          border: Border.all(
-                            color: toy.isInUse ? Colors.green : Colors.grey,
-                            width: 2,
-                          ),
                         ),
-                        child: Icon(_getToyIcon(toy.type), color: Colors.white),
                       ),
                       const SizedBox(height: 4),
-                      Text(toy.name),
+                      Text(toy.name, style: TextStyle(color: Colors.grey)),
                     ],
+                  ),
+                  onDragStarted: () {
+                    // Show hint that toy can be thrown
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'Drag and drop the toy where you want your pet to go!',
+                        ),
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                  },
+                  child: GestureDetector(
+                    onTap: () => onToySelected(toy),
+                    child: Column(
+                      children: [
+                        Container(
+                          width: 50,
+                          height: 50,
+                          decoration: BoxDecoration(
+                            color: toy.color,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: toy.isInUse ? Colors.green : Colors.grey,
+                              width: 2,
+                            ),
+                          ),
+                          child: Icon(
+                            _getToyIcon(toy.type),
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(toy.name),
+                      ],
+                    ),
                   ),
                 ),
               );

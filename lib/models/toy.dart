@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'pet.dart';
 
@@ -18,6 +19,13 @@ class Toy {
   final Color color;
   final List<PetType> suitableFor;
   bool isInUse;
+  Offset? throwPosition; // Position where the toy was thrown
+
+  // Interactive play properties
+  bool isBeingHeldByPet = false;
+  bool isBeingPulledByUser = false;
+  double pullStrength = 0.0; // 0.0 to 1.0, representing pull strength
+  double wobbleAngle = 0.0; // For animating toy wobbling during tug-of-war
 
   Toy({
     required this.type,
@@ -25,7 +33,43 @@ class Toy {
     required this.color,
     required this.suitableFor,
     this.isInUse = false,
+    this.throwPosition,
   });
+
+  // Methods for interactive play
+  void startPulling() {
+    isBeingPulledByUser = true;
+    pullStrength = 0.3; // Start with a moderate pull strength
+  }
+
+  void updatePullStrength(double strength) {
+    pullStrength = strength.clamp(0.0, 1.0);
+  }
+
+  void stopPulling() {
+    isBeingPulledByUser = false;
+    pullStrength = 0.0;
+  }
+
+  void grabByPet() {
+    isBeingHeldByPet = true;
+  }
+
+  void releaseByPet() {
+    isBeingHeldByPet = false;
+  }
+
+  // Calculate a wobble effect for tug of war animation
+  void updateWobble() {
+    if (isBeingPulledByUser && isBeingHeldByPet) {
+      wobbleAngle =
+          math.sin(DateTime.now().millisecondsSinceEpoch / 100) *
+          0.2 *
+          pullStrength;
+    } else {
+      wobbleAngle = 0.0;
+    }
+  }
 
   static List<Toy> getToysForPetType(PetType petType) {
     switch (petType) {

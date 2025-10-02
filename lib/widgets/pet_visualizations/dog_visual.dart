@@ -42,7 +42,7 @@ class DogVisual extends StatelessWidget {
               right: size * 0.2,
               child: Text('💤', style: TextStyle(fontSize: size * 0.2)),
             ),
-            
+
           // Show licking animation
           if (pet.isLicking && pet.currentActivity == PetActivity.licking)
             Positioned(
@@ -54,7 +54,7 @@ class DogVisual extends StatelessWidget {
       ),
     );
   }
-  
+
   // Builds the licking animation with a small animated tongue
   Widget _buildLickingAnimation() {
     return TweenAnimationBuilder<double>(
@@ -74,39 +74,40 @@ class DogVisual extends StatelessWidget {
 // Custom painter for the tongue animation
 class _TonguePainter extends CustomPainter {
   final double progress;
-  
+
   _TonguePainter({required this.progress});
-  
+
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
       ..color = Colors.pinkAccent
       ..style = PaintingStyle.fill;
-      
+
     final path = Path();
-    
+
     // Animated tongue extending and retracting
     final extension = size.width * 0.7 * progress;
-    
+
     path.moveTo(0, size.height * 0.5);
     path.quadraticBezierTo(
-      extension * 0.5, 
+      extension * 0.5,
       size.height * (progress > 0.5 ? 0.1 : 0.9),
-      extension, 
-      size.height * 0.5
+      extension,
+      size.height * 0.5,
     );
     path.quadraticBezierTo(
       extension * 0.5,
       size.height * (progress > 0.5 ? 0.9 : 0.1),
       0,
-      size.height * 0.5
+      size.height * 0.5,
     );
-    
+
     canvas.drawPath(path, paint);
   }
-  
+
   @override
-  bool shouldRepaint(_TonguePainter oldDelegate) => oldDelegate.progress != progress;
+  bool shouldRepaint(_TonguePainter oldDelegate) =>
+      oldDelegate.progress != progress;
 }
 
 class DogPainter extends CustomPainter {
@@ -151,10 +152,10 @@ class DogPainter extends CustomPainter {
           (HSLColor.fromColor(color).lightness + 0.1).clamp(0.0, 1.0),
         )
         .toColor();
-        
+
     // Adjust posture based on current activity
     double bodyTilt = 0.0;
-    
+
     if (currentActivity == PetActivity.licking) {
       // Slight tilt when licking paws
       bodyTilt = 0.05;
@@ -162,7 +163,7 @@ class DogPainter extends CustomPainter {
       // More dynamic pose when playing
       bodyTilt = 0.1;
     }
-    
+
     // Apply tilt by translating and rotating the canvas if needed
     if (bodyTilt > 0) {
       canvas.translate(size.width / 2, size.height / 2);
@@ -280,7 +281,7 @@ class DogPainter extends CustomPainter {
       ),
       blackPaint,
     );
-    
+
     // Add body highlights using lightPaint
     canvas.drawOval(
       Rect.fromLTWH(
@@ -291,7 +292,7 @@ class DogPainter extends CustomPainter {
       ),
       lightPaint,
     );
-    
+
     // Add head highlights
     canvas.drawOval(
       Rect.fromLTWH(
@@ -380,8 +381,8 @@ class DogPainter extends CustomPainter {
     if (mouthOpen) {
       // Open mouth
       final mouthRect = Rect.fromLTWH(
-        size.width * 0.4,
-        size.height * 0.55,
+        size.width * 0.45, // Centered horizontally
+        size.height * 0.5, // Moved up slightly for better placement
         size.width * 0.2,
         size.height * 0.1,
       );
@@ -389,8 +390,8 @@ class DogPainter extends CustomPainter {
 
       // Tongue
       final tongueRect = Rect.fromLTWH(
-        size.width * 0.43,
-        size.height * 0.58,
+        size.width * 0.48, // Centered within the mouth
+        size.height * 0.53, // Adjusted to match mouth position
         size.width * 0.14,
         size.height * 0.05,
       );
@@ -398,12 +399,12 @@ class DogPainter extends CustomPainter {
     } else {
       // Closed mouth (smile)
       final mouthPath = Path();
-      mouthPath.moveTo(size.width * 0.4, size.height * 0.55);
+      mouthPath.moveTo(size.width * 0.45, size.height * 0.5);
       mouthPath.quadraticBezierTo(
         size.width * 0.5,
-        size.height * 0.6,
-        size.width * 0.6,
         size.height * 0.55,
+        size.width * 0.65,
+        size.height * 0.5,
       );
       canvas.drawPath(
         mouthPath,

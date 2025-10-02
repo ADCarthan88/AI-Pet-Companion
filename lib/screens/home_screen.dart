@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
 import '../models/pet.dart';
 import '../models/pet_habitat.dart';
+import '../models/toy.dart';
+import '../models/weather_system.dart';
 import '../widgets/toy_selection_widget.dart';
 import '../widgets/advanced_interactive_pet_widget.dart';
 import '../widgets/pet_visualizations/pet_visualization_factory.dart';
 import '../widgets/pet_owned_items_widget.dart';
 import '../widgets/pet_environment_items_widget.dart';
+import '../widgets/pet_bathing_widget.dart';
+import '../widgets/petting_detector_widget.dart';
+import '../models/pet_extensions.dart';
 import 'pet_store_screen.dart';
 import 'pet_supplies_store_screen.dart';
 import 'trick_training_screen.dart';
 import 'habitat_customization_screen.dart';
-import 'weather_control_screen.dart';
-import 'package:ai_pet_companion/screens/_emotion_backdrop.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -20,58 +23,129 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
-  List<Pet> pets = [];
+class _HomeScreenState extends State<HomeScreen>
+    with SingleTickerProviderStateMixin {
+  late List<Pet> pets;
   int _selectedPetIndex = 0;
-  late AnimationController _lickingController;
-  bool _petStoreShown = false;
+  bool _showToySelection = false;
+  bool _showEnvironmentItems = false;
+  bool _showPetItems = false;
 
-  Pet get currentPet => pets[_selectedPetIndex];
+  // Animation controller for pet licking animation
+  late AnimationController _lickingController;
 
   @override
   void initState() {
     super.initState();
+
+    // Create a default pet if none exists
+    pets = [
+      Pet(
+        name: 'Buddy',
+        type: PetType.dog,
+        gender: PetGender.male,
+        happiness: 80,
+        energy: 90,
+        hunger: 20,
+        cleanliness: 90,
+        mood: PetMood.happy,
+        currentActivity: PetActivity.idle,
+        color: Colors.brown,
+      ),
+    ];
+
     _lickingController = AnimationController(
       duration: const Duration(milliseconds: 500),
       vsync: this,
     );
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (pets.isEmpty && !_petStoreShown) {
-        _petStoreShown = true;
-        _showPetCustomizationScreen();
-      }
-    });
-    Future.delayed(const Duration(seconds: 1), _periodicUpdate);
+
+    // Set up a periodic timer to update pet state
+    Future.delayed(const Duration(seconds: 1), _updatePetState);
   }
 
-  void _periodicUpdate() {
-    if (mounted) {
-      setState(() {
-        for (final pet in pets) {
-          // Update pet state
-          pet.updateState();
-        }
-      });
-      Future.delayed(const Duration(seconds: 1), _periodicUpdate);
-    }
+  @override
+  void dispose() {
+    _lickingController.dispose();
+    super.dispose();
+  }
+
+  void _updatePetState() {
+    if (!mounted) return;
+
+    setState(() {
+      for (final pet in pets) {
+        pet.updateState();
+      }
+    });
+
+    // Schedule the next update
+    Future.delayed(const Duration(seconds: 30), _updatePetState);
+  }
+
+  Pet get currentPet => pets[_selectedPetIndex];
+
+  void _feedPet() {
+    setState(() {
+      currentPet.feed();
+    });
+  }
+
+  void _bathePet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return Container(
+          height: MediaQuery.of(context).size.height * 0.9,
+          decoration: BoxDecoration(
+            color: Colors.lightBlue.shade50,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(20),
+              topRight: Radius.circular(20),
+            ),
+          ),
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Text(
+                  'Bath Time!',
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              Expanded(
+                child: PetBathingWidget(
+                  pet: currentPet,
+                  onBathComplete: () {
+                    // Close modal and update pet state
+                    Navigator.pop(context);
+                    setState(() {
+                      currentPet.clean();
+                    });
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   void _showPetCustomizationScreen() {
-    print('DEBUG: _showPetCustomizationScreen called');
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) {
-          print('DEBUG: Navigating to PetStoreScreen');
           return PetStoreScreen(
             onPetSelected: (Pet newPet) {
-              print(
-                'DEBUG: onPetSelected fired with pet: \\${newPet.name}, type: \\${newPet.type}',
-              );
               setState(() {
                 pets.add(newPet);
                 _selectedPetIndex = pets.length - 1;
-                print('DEBUG: pets list now has \\${pets.length} pets.');
               });
             },
           );
@@ -80,277 +154,18 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  void _updatePet() {
-    setState(() {
-      currentPet.decideNextAction();
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    print(
-      'DEBUG: HomeScreen build called. pets.length = \\${pets.length}, _selectedPetIndex = \\${_selectedPetIndex}',
-    );
-    if (pets.isEmpty) {
-      print('DEBUG: pets is empty, showing loading indicator.');
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    }
-    print(
-      'DEBUG: Showing main menu for pet: \\${currentPet.name}, type: \\${currentPet.type}',
-    );
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('AI Pet Companion - ${currentPet.name}'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.shopping_cart),
-            onPressed: () {
-              print('DEBUG: PetSuppliesStore icon pressed.');
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => PetSuppliesStoreScreen(
-                    pet: currentPet,
-                    onItemPurchased: (item) {
-                      print('DEBUG: Item purchased: \\${item.name}');
-                      setState(() {
-                        currentPet.purchaseItem(item);
-                      });
-                    },
-                  ),
-                ),
-              );
-            },
-            tooltip: 'Pet Supplies Store',
-          ),
-          IconButton(
-            icon: const Icon(Icons.pets),
-            onPressed: _showPetCustomizationScreen,
-            tooltip: 'Add new pet',
-          ),
-        ],
-      ),
-      body: Stack(
-        children: [
-          Positioned.fill(child: EmotionBackdrop(mood: currentPet.mood)),
-          // Active item display in environment (when an item is selected)
-          if (currentPet.activeItem != null)
-            PetEnvironmentItemsWidget(
-              pet: currentPet,
-              size: MediaQuery.of(context).size.width,
-            ),
-          Column(
-            children: [
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    _buildFeatureButton(
-                      icon: Icons.school,
-                      label: 'Train',
-                      onPressed: () => _showTrickTraining(),
-                    ),
-                    _buildFeatureButton(
-                      icon: Icons.wb_sunny,
-                      label: 'Weather',
-                      onPressed: () => _showWeatherControl(),
-                    ),
-                    _buildFeatureButton(
-                      icon: Icons.home,
-                      label: 'Habitat',
-                      onPressed: () => _showHabitatCustomization(),
-                    ),
-                    _buildFeatureButton(
-                      icon: Icons.games,
-                      label: 'Games',
-                      onPressed: () => _showMiniGames(),
-                    ),
-                    _buildFeatureButton(
-                      icon: Icons.people,
-                      label: 'Social',
-                      onPressed: () => _showSocialFeatures(),
-                    ),
-                  ],
-                ),
-              ),
-              ToySelectionWidget(
-                pet: currentPet,
-                onToySelected: (toy) {
-                  print('DEBUG: Toy selected: \\${toy.name}');
-                  setState(() {
-                    if (currentPet.currentActivity ==
-                            PetActivity.playingWithToy &&
-                        currentPet.currentToy == toy) {
-                      print('DEBUG: Stopping play with toy: \\${toy.name}');
-                      currentPet.stopPlayingWithToy();
-                    } else {
-                      print('DEBUG: Playing with toy: \\${toy.name}');
-                      currentPet.playWithToy(toy);
-                    }
-                  });
-                },
-              ),
-              if (pets.length > 1)
-                SizedBox(
-                  height: 70,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: pets.length,
-                    itemBuilder: (context, index) {
-                      final pet = pets[index];
-                      return GestureDetector(
-                        onTap: () => setState(() => _selectedPetIndex = index),
-                        child: Container(
-                          width: 60,
-                          margin: const EdgeInsets.all(5),
-                          decoration: BoxDecoration(
-                            color: _selectedPetIndex == index
-                                ? Colors.blue.withOpacity(0.3)
-                                : Colors.transparent,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              SizedBox(
-                                width: 40,
-                                height: 40,
-                                child:
-                                    PetVisualizationFactory.getPetVisualization(
-                                      pet: pet,
-                                      isBlinking: false,
-                                      mouthOpen: false,
-                                      size: 40,
-                                    ),
-                              ),
-                              Text(
-                                pet.name,
-                                style: const TextStyle(fontSize: 12),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              Container(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    Expanded(
-                      child: _buildStatusIndicator(
-                        'Happiness',
-                        currentPet.happiness,
-                      ),
-                    ),
-                    SizedBox(width: 8),
-                    Expanded(
-                      child: _buildStatusIndicator('Energy', currentPet.energy),
-                    ),
-                    SizedBox(width: 8),
-                    Expanded(
-                      child: _buildStatusIndicator('Hunger', currentPet.hunger),
-                    ),
-                  ],
-                ),
-              ),
-              // Display owned items that can be used
-              if (currentPet.ownedItems.isNotEmpty)
-                PetOwnedItemsWidget(
-                  pet: currentPet,
-                  activeItem: currentPet.activeItem,
-                  onItemSelected: (item) {
-                    setState(() {
-                      if (currentPet.activeItem != null &&
-                          currentPet.activeItem!.id == item.id) {
-                        // Tapping an active item removes it
-                        currentPet.clearActiveItem();
-                      } else {
-                        // Set the selected item as active
-                        currentPet.setActiveItem(item);
-                      }
-                    });
-                  },
-                ),
-              Expanded(
-                child: AdvancedInteractivePetWidget(
-                  pet: currentPet,
-                  onTap: () {
-                    print('DEBUG: Pet tapped. mood = ${currentPet.mood}');
-                    setState(() {
-                      if (currentPet.mood == PetMood.happy ||
-                          currentPet.mood == PetMood.loving) {
-                        print('DEBUG: Starting licking animation.');
-                        currentPet.startLicking();
-                      }
-                    });
-                  },
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Wrap(
-                  spacing: 8.0,
-                  runSpacing: 8.0,
-                  alignment: WrapAlignment.center,
-                  children: [
-                    _buildActionButton('Feed', () {
-                      print('DEBUG: Feed button pressed.');
-                      setState(() => currentPet.feed());
-                    }),
-                    _buildActionButton('Snack', () {
-                      print('DEBUG: Snack button pressed.');
-                      setState(() => currentPet.feed(isSnack: true));
-                    }),
-                    _buildActionButton('Play', () {
-                      print('DEBUG: Play button pressed.');
-                      setState(() => currentPet.play());
-                    }),
-                    _buildActionButton('Clean', () {
-                      print('DEBUG: Clean button pressed.');
-                      setState(() => currentPet.clean());
-                    }),
-                    _buildActionButton('Brush', () {
-                      print('DEBUG: Brush button pressed.');
-                      setState(() => currentPet.brush());
-                    }),
-                    _buildActionButton('Rest', () {
-                      print('DEBUG: Rest button pressed.');
-                      setState(() => currentPet.rest());
-                    }),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _updatePet,
-        child: const Icon(Icons.psychology),
-        tooltip: 'Let AI decide next action',
-      ),
-    );
-  }
-
-  Widget _buildFeatureButton({
-    required IconData icon,
-    required String label,
-    required VoidCallback onPressed,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-      child: ElevatedButton.icon(
-        onPressed: onPressed,
-        icon: Icon(icon),
-        label: Text(label),
-        style: ElevatedButton.styleFrom(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+  void _showPetSuppliesStore() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PetSuppliesStoreScreen(
+          pet: currentPet,
+          onItemPurchased: (item) {
+            setState(() {
+              currentPet.coins -= item.price;
+              currentPet.ownedItems.add(item);
+            });
+          },
         ),
       ),
     );
@@ -365,61 +180,390 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  void _showWeatherControl() {
-    // Initialize habitat if it doesn't exist
-    if (currentPet.habitat == null) {
-      currentPet.habitat = PetHabitat(petType: currentPet.type);
-    }
-
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => WeatherControlScreen(pet: currentPet),
-      ),
-    ).then((_) {
-      // Update pet state after returning from weather screen
-      setState(() {});
-    });
-  }
-
   void _showHabitatCustomization() {
-    // Initialize habitat if it doesn't exist
-    if (currentPet.habitat == null) {
-      currentPet.habitat = PetHabitat(petType: currentPet.type);
-    }
-
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => HabitatCustomizationScreen(
           pet: currentPet,
-          habitat: currentPet.habitat!,
+          habitat: currentPet.habitat ?? PetHabitat(petType: currentPet.type),
         ),
       ),
-    ).then((_) {
-      // Update pet state after returning from habitat screen
-      setState(() {});
-    });
+    );
   }
 
-  void _showMiniGames() {}
-  void _showSocialFeatures() {}
+  void _showSocialFeatures() {
+    // Not implemented yet
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Social features coming soon!')),
+    );
+  }
 
   @override
-  void dispose() {
-    _lickingController.dispose();
-    super.dispose();
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Pet Companion'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.currency_exchange),
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    'Coins: ${currentPet.coins.toStringAsFixed(0)}',
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+      body: Stack(
+        children: [
+          // Background based on pet habitat - using colors instead of images
+          if (currentPet.habitat != null)
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    currentPet.habitat!.wallColor,
+                    currentPet.habitat!.floorColor,
+                  ],
+                ),
+              ),
+            ),
+
+          // DragTarget for dropping toys on the screen
+          SizedBox.expand(
+            child: DragTarget<Toy>(
+              builder: (context, candidateData, rejectedData) {
+                return const SizedBox.expand();
+              },
+              onAccept: (Toy toy) {
+                setState(() {
+                  // Calculate the position relative to the screen size
+                  final RenderBox box = context.findRenderObject() as RenderBox;
+                  final Offset localPosition = box.globalToLocal(Offset.zero);
+
+                  // This passes both the toy and where it was thrown
+                  currentPet.playWithToy(toy, throwPosition: localPosition);
+
+                  // Trigger the pet to move toward this position
+                  if (currentPet.currentToy != null &&
+                      currentPet.currentToy!.throwPosition != null) {
+                    // This toy throw position will be used by the AdvancedInteractivePetWidget
+                    print(
+                      'Toy thrown to: ${currentPet.currentToy!.throwPosition}',
+                    );
+                  }
+                });
+              },
+            ),
+          ),
+          Column(
+            children: [
+              Expanded(
+                child: Stack(
+                  children: [
+                    // Weather effects overlay if needed
+                    if (currentPet.habitat?.currentWeather != null)
+                      _buildWeatherOverlay(currentPet.habitat!.currentWeather),
+
+                    // Petting detector wraps the pet visualization
+                    PettingDetectorWidget(
+                      pet: currentPet,
+                      onPetting: (isPetting) {
+                        if (isPetting) {
+                          setState(() {
+                            currentPet.happiness = (currentPet.happiness + 1)
+                                .clamp(0, 100);
+                            if (currentPet.happiness > 90) {
+                              currentPet.mood = PetMood.loving;
+                            } else if (currentPet.happiness > 70) {
+                              currentPet.mood = PetMood.happy;
+                            }
+                          });
+                        }
+                      },
+                      child: Center(
+                        child: AdvancedInteractivePetWidget(
+                          pet: currentPet,
+                          onTap: () {
+                            // Toggle licking animation when pet is tapped
+                            if (!currentPet.isLicking) {
+                              setState(() {
+                                currentPet.startLicking();
+                                _lickingController.forward(from: 0).then((_) {
+                                  _lickingController.reverse().then((_) {
+                                    setState(() {
+                                      currentPet.stopLicking();
+                                    });
+                                  });
+                                });
+                              });
+                            }
+                          },
+                          onLongPress: () {
+                            // Show mood/emotion dialog
+                            showDialog(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: Text('${currentPet.name} is feeling...'),
+                                content: Text(
+                                  _getMoodDescription(currentPet.mood),
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context),
+                                    child: const Text('Close'),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Bottom area for actions and toys
+              Container(
+                color: Colors.white.withOpacity(0.8),
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        _buildActionButton('Feed', () => _feedPet()),
+                        _buildActionButton('Bathe', () => _bathePet()),
+                        _buildActionButton(
+                          'Habitat',
+                          () => _showHabitatCustomization(),
+                        ),
+                        _buildActionButton(
+                          'Toys',
+                          () => setState(
+                            () => _showToySelection = !_showToySelection,
+                          ),
+                        ),
+                        _buildActionButton(
+                          'Social',
+                          () => _showSocialFeatures(),
+                        ),
+                      ],
+                    ),
+                    if (_showToySelection)
+                      ToySelectionWidget(
+                        pet: currentPet,
+                        onToySelected: (toy) {
+                          print('DEBUG: Toy selected: ${toy.name}');
+                          setState(() {
+                            if (currentPet.currentActivity ==
+                                    PetActivity.playingWithToy &&
+                                currentPet.currentToy == toy) {
+                              print(
+                                'DEBUG: Stopping play with toy: ${toy.name}',
+                              );
+                              currentPet.stopPlayingWithToy();
+                            } else {
+                              print('DEBUG: Playing with toy: ${toy.name}');
+                              currentPet.playWithToy(toy);
+                            }
+                          });
+                        },
+                      ),
+                    if (pets.length > 1)
+                      SizedBox(
+                        height: 70,
+                        child: ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: pets.length,
+                          itemBuilder: (context, index) {
+                            final pet = pets[index];
+                            return GestureDetector(
+                              onTap: () =>
+                                  setState(() => _selectedPetIndex = index),
+                              child: Container(
+                                width: 60,
+                                margin: const EdgeInsets.all(5),
+                                decoration: BoxDecoration(
+                                  color: _selectedPetIndex == index
+                                      ? Colors.blue.withOpacity(0.3)
+                                      : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      _getPetTypeIcon(pet.type),
+                                      color: pet.color,
+                                    ),
+                                    Text(
+                                      pet.name,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        fontWeight: _selectedPetIndex == index
+                                            ? FontWeight.bold
+                                            : FontWeight.normal,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        child: const Icon(Icons.add),
+        onPressed: _showPetCustomizationScreen,
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.store), label: 'Store'),
+          BottomNavigationBarItem(icon: Icon(Icons.school), label: 'Train'),
+        ],
+        onTap: (index) {
+          switch (index) {
+            case 0:
+              // Already on home screen
+              break;
+            case 1:
+              _showPetSuppliesStore();
+              break;
+            case 2:
+              _showTrickTraining();
+              break;
+          }
+        },
+      ),
+    );
   }
 
-  Widget _buildStatusIndicator(String label, int value) {
-    return Column(
-      children: [
-        Text(label),
-        const SizedBox(height: 8),
-        LinearProgressIndicator(value: value / 100, minHeight: 10),
-        Text('$value%'),
-      ],
+  Widget _buildWeatherOverlay(WeatherType weatherType) {
+    switch (weatherType) {
+      case WeatherType.sunny:
+        return Container(); // No overlay for sunny
+      case WeatherType.rainy:
+        return _buildRainOverlay();
+      case WeatherType.snowy:
+        return _buildSnowOverlay();
+      case WeatherType.cloudy:
+        return _buildCloudOverlay();
+      case WeatherType.stormy:
+        return _buildStormyOverlay();
+    }
+  }
+
+  Widget _buildRainOverlay() {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Colors.blueGrey.withOpacity(0.3),
+            Colors.blueGrey.withOpacity(0.1),
+          ],
+        ),
+      ),
     );
+  }
+
+  Widget _buildSnowOverlay() {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Colors.white.withOpacity(0.3),
+            Colors.white.withOpacity(0.1),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCloudOverlay() {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Colors.grey.withOpacity(0.3), Colors.grey.withOpacity(0.1)],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStormyOverlay() {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Colors.indigo.withOpacity(0.3),
+            Colors.indigo.withOpacity(0.1),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _getMoodDescription(PetMood mood) {
+    switch (mood) {
+      case PetMood.happy:
+        return 'Happy and content!';
+      case PetMood.sad:
+        return 'Feeling a bit down...';
+      case PetMood.excited:
+        return 'Excited and full of energy!';
+      case PetMood.tired:
+        return 'Tired and needs rest.';
+      case PetMood.loving:
+        return 'Feeling very affectionate!';
+      case PetMood.neutral:
+        return 'Feeling neutral.';
+    }
+  }
+
+  IconData _getPetTypeIcon(PetType type) {
+    switch (type) {
+      case PetType.dog:
+        return Icons.pets;
+      case PetType.cat:
+        return Icons.catching_pokemon;
+      case PetType.bird:
+        return Icons.flutter_dash;
+      case PetType.rabbit:
+        return Icons.cruelty_free;
+      case PetType.lion:
+        return Icons.face;
+      case PetType.giraffe:
+        return Icons.height;
+      case PetType.penguin:
+        return Icons.ac_unit;
+      case PetType.panda:
+        return Icons.energy_savings_leaf;
+    }
   }
 
   Widget _buildActionButton(String label, VoidCallback onPressed) {

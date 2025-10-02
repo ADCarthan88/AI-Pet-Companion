@@ -1,0 +1,136 @@
+import 'package:flutter/material.dart';
+import '../models/toy.dart';
+
+// Enhanced toy selection widget with draggable toy functionality
+class ToySelectionWidget extends StatelessWidget {
+  final Pet pet;
+  final Function(Toy) onToySelected;
+  final Function(Toy, Offset)? onToyThrown; // New callback for throwing toys
+
+  const ToySelectionWidget({
+    super.key,
+    required this.pet,
+    required this.onToySelected,
+    this.onToyThrown,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final availableToys = Toy.getToysForPetType(pet.type);
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          'Toys for ${pet.name}',
+          style: Theme.of(context).textTheme.titleLarge,
+        ),
+        const SizedBox(height: 8),
+        SizedBox(
+          height: 100,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: availableToys.length,
+            itemBuilder: (context, index) {
+              final toy = availableToys[index];
+              return Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: LongPressDraggable<Toy>(
+                  data: toy,
+                  feedback: Material(
+                    elevation: 4.0,
+                    shape: const CircleBorder(),
+                    child: Container(
+                      width: 60,
+                      height: 60,
+                      decoration: BoxDecoration(
+                        color: toy.color,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        _getToyIcon(toy.type),
+                        color: Colors.white,
+                        size: 30,
+                      ),
+                    ),
+                  ),
+                  childWhenDragging: Column(
+                    children: [
+                      Container(
+                        width: 50,
+                        height: 50,
+                        decoration: BoxDecoration(
+                          color: toy.color.withOpacity(0.5),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(toy.name, style: TextStyle(color: Colors.grey)),
+                    ],
+                  ),
+                  onDragStarted: () {
+                    // Show hint that toy can be thrown
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'Drag and drop the toy where you want your pet to go!',
+                        ),
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                  },
+                  child: GestureDetector(
+                    onTap: () => onToySelected(toy),
+                    child: Column(
+                      children: [
+                        Container(
+                          width: 50,
+                          height: 50,
+                          decoration: BoxDecoration(
+                            color: toy.color,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: toy.isInUse ? Colors.green : Colors.grey,
+                              width: 2,
+                            ),
+                          ),
+                          child: Icon(
+                            _getToyIcon(toy.type),
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(toy.name),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  IconData _getToyIcon(ToyType type) {
+    switch (type) {
+      case ToyType.ball:
+        return Icons.sports_baseball;
+      case ToyType.laserPointer:
+        return Icons.radio_button_checked;
+      case ToyType.bell:
+        return Icons.notifications;
+      case ToyType.carrot:
+        return Icons.eco;
+      case ToyType.rope:
+        return Icons.line_weight;
+      case ToyType.leaves:
+        return Icons.park;
+      case ToyType.slide:
+        return Icons.waves;
+      case ToyType.bamboo:
+        return Icons.grass;
+    }
+  }
+}

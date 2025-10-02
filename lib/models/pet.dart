@@ -74,10 +74,12 @@ class Pet {
        inventory = [],
        ownedItems = [],
        activeItem = null {
-    // Initialize habitat
+    // Initialize habitat with colors instead of background images
     habitat = PetHabitat(
       petType: type,
       theme: PetHabitat.getDefaultTheme(type),
+      floorColor: Colors.brown.shade200,
+      wallColor: Colors.blue.shade100,
     );
 
     // Initialize social profile if provided
@@ -473,7 +475,7 @@ class Pet {
     updateState();
   }
 
-  void playWithToy(Toy toy) {
+  void playWithToy(Toy toy, {Offset? throwPosition}) {
     if (!toy.suitableFor.contains(type)) {
       // Pet doesn't like this type of toy
       happiness = (happiness - 5).clamp(0, 100);
@@ -488,6 +490,17 @@ class Pet {
       100,
     ); // Playing with appropriate toy gives more happiness
     currentActivity = PetActivity.playingWithToy;
+
+    // If toy was thrown to a specific position
+    if (throwPosition != null) {
+      toy.throwPosition = throwPosition;
+    }
+    currentActivity = PetActivity.playingWithToy;
+
+    // If toy was thrown to a specific position
+    if (throwPosition != null) {
+      toy.throwPosition = throwPosition;
+    }
 
     // Add type-specific behaviors
     switch (type) {
