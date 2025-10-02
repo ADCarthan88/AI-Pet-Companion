@@ -5,11 +5,13 @@ import '../models/toy.dart';
 class ToySelectionWidget extends StatelessWidget {
   final Pet pet;
   final Function(Toy) onToySelected;
+  final void Function(Toy toy, Offset globalPosition, Velocity velocity)? onToyThrown;
 
   const ToySelectionWidget({
     super.key,
     required this.pet,
     required this.onToySelected,
+    this.onToyThrown,
   });
 
   @override
@@ -76,6 +78,12 @@ class ToySelectionWidget extends StatelessWidget {
                         duration: Duration(seconds: 2),
                       ),
                     );
+                  },
+                  onDragEnd: (details) {
+                    // Fling detection: pass end position & velocity upward
+                    if (onToyThrown != null) {
+                      onToyThrown!(toy, details.offset, details.velocity);
+                    }
                   },
                   child: GestureDetector(
                     onTap: () => onToySelected(toy),

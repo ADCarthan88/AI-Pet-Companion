@@ -125,6 +125,15 @@ class _AdvancedInteractivePetWidgetState
       // Update toy wobble animation
       widget.pet.currentToy!.updateWobble();
 
+      // Apply physics if toy is in motion and not held
+      if (!widget.pet.currentToy!.isBeingHeldByPet &&
+          !widget.pet.currentToy!.isBeingPulledByUser &&
+          widget.pet.currentToy!.velocity != Offset.zero) {
+        widget.pet.currentToy!.applyPhysics();
+        // Trigger rebuild for updated toy position
+        setState(() {});
+      }
+
       // Update mouth state based on toy interaction
       if (widget.pet.currentToy!.isBeingHeldByPet) {
         setState(() {

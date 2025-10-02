@@ -5,9 +5,6 @@ import '../models/toy.dart';
 import '../models/weather_system.dart';
 import '../widgets/toy_selection_widget.dart';
 import '../widgets/advanced_interactive_pet_widget.dart';
-import '../widgets/pet_visualizations/pet_visualization_factory.dart';
-import '../widgets/pet_owned_items_widget.dart';
-import '../widgets/pet_environment_items_widget.dart';
 import '../widgets/pet_bathing_widget.dart';
 import '../widgets/petting_detector_widget.dart';
 import '../models/pet_extensions.dart';
@@ -28,8 +25,7 @@ class _HomeScreenState extends State<HomeScreen>
   late List<Pet> pets;
   int _selectedPetIndex = 0;
   bool _showToySelection = false;
-  bool _showEnvironmentItems = false;
-  bool _showPetItems = false;
+  final GlobalKey _petAreaKey = GlobalKey();
 
   // Animation controller for pet licking animation
   late AnimationController _lickingController;
@@ -273,57 +269,57 @@ class _HomeScreenState extends State<HomeScreen>
                       _buildWeatherOverlay(currentPet.habitat!.currentWeather),
 
                     // Petting detector wraps the pet visualization
-                    PettingDetectorWidget(
-                      pet: currentPet,
-                      onPetting: (isPetting) {
-                        if (isPetting) {
-                          setState(() {
-                            currentPet.happiness = (currentPet.happiness + 1)
-                                .clamp(0, 100);
-                            if (currentPet.happiness > 90) {
-                              currentPet.mood = PetMood.loving;
-                            } else if (currentPet.happiness > 70) {
-                              currentPet.mood = PetMood.happy;
-                            }
-                          });
-                        }
-                      },
-                      child: Center(
-                        child: AdvancedInteractivePetWidget(
-                          pet: currentPet,
-                          onTap: () {
-                            // Toggle licking animation when pet is tapped
-                            if (!currentPet.isLicking) {
-                              setState(() {
-                                currentPet.startLicking();
-                                _lickingController.forward(from: 0).then((_) {
-                                  _lickingController.reverse().then((_) {
-                                    setState(() {
-                                      currentPet.stopLicking();
+                    KeyedSubtree(
+                      key: _petAreaKey,
+                      child: PettingDetectorWidget(
+                        pet: currentPet,
+                        onPetting: (isPetting) {
+                          if (isPetting) {
+                            setState(() {
+                              currentPet.happiness = (currentPet.happiness + 1).clamp(0, 100);
+                              if (currentPet.happiness > 90) {
+                                currentPet.mood = PetMood.loving;
+                              } else if (currentPet.happiness > 70) {
+                                currentPet.mood = PetMood.happy;
+                              }
+                            });
+                          }
+                        },
+                        child: Center(
+                          child: AdvancedInteractivePetWidget(
+                            pet: currentPet,
+                            onTap: () {
+                              // Toggle licking animation when pet is tapped
+                              if (!currentPet.isLicking) {
+                                setState(() {
+                                  currentPet.startLicking();
+                                  _lickingController.forward(from: 0).then((_) {
+                                    _lickingController.reverse().then((_) {
+                                      setState(() {
+                                        currentPet.stopLicking();
+                                      });
                                     });
                                   });
                                 });
-                              });
-                            }
-                          },
-                          onLongPress: () {
-                            // Show mood/emotion dialog
-                            showDialog(
-                              context: context,
-                              builder: (context) => AlertDialog(
-                                title: Text('${currentPet.name} is feeling...'),
-                                content: Text(
-                                  _getMoodDescription(currentPet.mood),
+                              }
+                            },
+                            onLongPress: () {
+                              // Show mood/emotion dialog
+                              showDialog(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: Text('${currentPet.name} is feeling...'),
+                                  content: Text(_getMoodDescription(currentPet.mood)),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context),
+                                      child: const Text('Close'),
+                                    ),
+                                  ],
                                 ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(context),
-                                    child: const Text('Close'),
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
+                              );
+                            },
+                          ),
                         ),
                       ),
                     ),
@@ -377,6 +373,25 @@ class _HomeScreenState extends State<HomeScreen>
                               currentPet.playWithToy(toy);
                             }
                           });
+                        },
+                        onToyThrown: (toy, globalPos, velocity) {
+                          // Convert global position to local pet area coordinates
+                          final renderBox = _petAreaKey.currentContext?.findRenderObject() as RenderBox?;
+                          if (renderBox != null) {
+                            final local = renderBox.globalToLocal(globalPos);
+                            setState(() {
+                              currentPet.playWithToy(toy, throwPosition: local);
+                              // Scale velocity for in-app physics
+                              final v = velocity.pixelsPerSecond;
+                              // Normalize & damp
+                              toy.velocity = Offset(v.dx, v.dy) * 0.02;
+                              // Clamp extreme speeds
+                              if (toy.velocity.distance > 40) {
+                                final f = 40 / toy.velocity.distance;
+                                toy.velocity = toy.velocity * f;
+                              }
+                            });
+                          }
                         },
                       ),
                     if (pets.length > 1)
