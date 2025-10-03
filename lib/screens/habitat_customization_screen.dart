@@ -42,12 +42,6 @@ class _HabitatCustomizationScreenState
     }
   }
 
-  void _removeItem(HabitatItem item) {
-    setState(() {
-      _habitat.removeItem(item);
-    });
-  }
-
   void _addInteractiveElement(String element) {
     setState(() {
       _habitat.addInteractiveElement(element);

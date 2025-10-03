@@ -41,22 +41,22 @@ class PetBehaviorService {
     switch (pet.mood) {
       case PetMood.happy:
         moodFactor = 1.2; // More active and responsive
-        break;
+        return;
       case PetMood.sad:
         moodFactor = 0.7; // Less active, slower movements
-        break;
+        return;
       case PetMood.excited:
         moodFactor = 1.5; // Very active, faster movements
-        break;
+        return;
       case PetMood.tired:
         moodFactor = 0.5; // Very slow, minimal movements
-        break;
+        return;
       case PetMood.loving:
         moodFactor = 1.3; // More likely to follow cursor
-        break;
+        return;
       case PetMood.neutral:
-      default:
         moodFactor = 1.0; // Normal behavior
+        return;
     }
   }
 
@@ -166,37 +166,27 @@ class PetBehaviorService {
   String getAnimationState() {
     switch (pet.currentActivity) {
       case PetActivity.idle:
-        // Occasionally switch between idle variants based on mood
         if (shouldPlayIdleVariant()) {
           return pet.mood == PetMood.happy
               ? 'idle_happy'
               : pet.mood == PetMood.sad
-              ? 'idle_sad'
-              : 'idle_variant';
+                  ? 'idle_sad'
+                  : 'idle_variant';
         }
         return 'idle';
-
       case PetActivity.playing:
       case PetActivity.playingWithToy:
         return 'play';
-
       case PetActivity.sleeping:
         return 'sleep';
-
       case PetActivity.eating:
         return 'eat';
-
       case PetActivity.licking:
         return 'lick';
-
       case PetActivity.beingCleaned:
         return 'clean';
-
       case PetActivity.beingBrushed:
         return 'brush';
-
-      default:
-        return 'idle';
     }
   }
 

@@ -59,21 +59,55 @@ class _PetCustomizationScreenState extends State<PetCustomizationScreen> {
             ),
             const SizedBox(height: 20),
             const Text('Select Gender:'),
-            Row(
-              children: PetGender.values.map((gender) {
-                return Expanded(
-                  child: RadioListTile<PetGender>(
-                    title: Text(gender.toString().split('.').last),
-                    value: gender,
-                    groupValue: _selectedGender,
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedGender = value!;
-                      });
-                    },
-                  ),
+            // Replaced deprecated RadioListTile groupValue/onChanged usage
+            // with an explicit RadioGroup-like layout (manual Column + Radios)
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final isWide = constraints.maxWidth > 480;
+                final genderTiles = PetGender.values.map((gender) {
+                  final label = gender.toString().split('.').last;
+                  final selected = _selectedGender == gender;
+                  return InkWell(
+                    onTap: () => setState(() => _selectedGender = gender),
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: selected ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.12) : null,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: selected
+                              ? Theme.of(context).colorScheme.primary
+                              : Theme.of(context).dividerColor,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Radio<PetGender>(
+                            value: gender,
+                            groupValue: _selectedGender,
+                            onChanged: (value) => setState(() => _selectedGender = value!),
+                          ),
+                          Text(label),
+                        ],
+                      ),
+                    ),
+                  );
+                }).toList();
+                if (isWide) {
+                  return Row(
+                    children: genderTiles
+                        .map((w) => Expanded(child: w))
+                        .toList(),
+                  );
+                }
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: genderTiles,
                 );
-              }).toList(),
+              },
             ),
             const SizedBox(height: 20),
             const Text('Select Color:'),
