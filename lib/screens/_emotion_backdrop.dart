@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import '../models/pet.dart';
 
 class EmotionBackdrop extends StatelessWidget {
+  const EmotionBackdrop({super.key, required this.mood});
   final PetMood mood;
-  const EmotionBackdrop({required this.mood, Key? key}) : super(key: key);
 
   String _getBackdropAsset(PetMood mood) {
     switch (mood) {

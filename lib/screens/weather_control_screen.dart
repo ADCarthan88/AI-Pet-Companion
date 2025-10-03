@@ -4,9 +4,9 @@ import '../models/weather_system.dart';
 import '../widgets/weather_effects_widget.dart';
 
 class WeatherControlScreen extends StatefulWidget {
-  final Pet pet;
+  const WeatherControlScreen({super.key, required this.pet});
 
-  const WeatherControlScreen({Key? key, required this.pet}) : super(key: key);
+  final Pet pet;
 
   @override
   State<WeatherControlScreen> createState() => _WeatherControlScreenState();

@@ -3,14 +3,14 @@ import '../models/pet.dart';
 import '../models/store_item.dart';
 
 class PetEnvironmentItemsWidget extends StatelessWidget {
-  final Pet pet;
-  final double size;
-
   const PetEnvironmentItemsWidget({
-    Key? key,
+    super.key,
     required this.pet,
     required this.size,
-  }) : super(key: key);
+  });
+
+  final Pet pet;
+  final double size;
 
   @override
   Widget build(BuildContext context) {

@@ -4,14 +4,14 @@ import '../models/pet.dart';
 import '../widgets/habitat_renderer.dart';
 
 class HabitatCustomizationScreen extends StatefulWidget {
-  final Pet pet;
-  final PetHabitat habitat;
-
   const HabitatCustomizationScreen({
-    Key? key,
+    super.key,
     required this.pet,
     required this.habitat,
-  }) : super(key: key);
+  });
+
+  final Pet pet;
+  final PetHabitat habitat;
 
   @override
   State<HabitatCustomizationScreen> createState() =>

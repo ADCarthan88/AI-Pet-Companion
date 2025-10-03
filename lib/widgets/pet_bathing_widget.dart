@@ -3,14 +3,14 @@ import 'dart:math' as math;
 import '../models/pet.dart';
 
 class PetBathingWidget extends StatefulWidget {
-  final Pet pet;
-  final VoidCallback onBathComplete;
-
   const PetBathingWidget({
-    Key? key,
+    super.key,
     required this.pet,
     required this.onBathComplete,
-  }) : super(key: key);
+  });
+
+  final Pet pet;
+  final VoidCallback onBathComplete;
 
   @override
   State<PetBathingWidget> createState() => _PetBathingWidgetState();
