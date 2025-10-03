@@ -1,0 +1,50 @@
+{
+  "dog": {
+    "happy": ["happy.mp3"],
+    "sleep": ["sleep.mp3"],
+    "sad": ["sad.mp3"],
+    "play": ["play.mp3"],
+    "idle": ["idle.mp3"],
+    "tired": ["tired.mp3"],
+    "water": ["water.mp3"]
+  },
+  "cat": {
+    "happy": ["happy_1.mp3", "happy_2.mp3"],
+    "sad": ["sad.mp3"],
+    "idle": ["idle.mp3"],
+    "hungry": ["hungry.mp3"],
+    "water": ["water.mp3"],
+    "sleep": []
+  },
+  "bird": {
+    "happy": ["happy.mp3"],
+    "sad": ["sad.mp3"],
+    "hungry": ["hungry.mp3"],
+    "sleep": []
+  },
+  "lion": {
+    "happy": ["happy_1.mp3", "happy_2.mp3"],
+    "sleep": ["sleep.mp3"],
+    "sad": ["sad.mp3"],
+    "water": ["water.mp3"]
+  },
+  "giraffe": {
+    "happy": ["happy.mp3"],
+    "sleep": []
+  },
+  "penguin": {
+    "happy": ["happy_1.mp3", "happy_2.mp3"],
+    "hungry": ["hungry.mp3"],
+    "water": ["water.mp3"],
+    "sleep": []
+  },
+  "panda": {
+    "water": ["water.mp3"],
+    "happy": [],
+    "sleep": []
+  },
+  "rabbit": {
+    "happy": [],
+    "sleep": []
+  }
+}

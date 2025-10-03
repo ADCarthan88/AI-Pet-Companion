@@ -68,6 +68,25 @@ class HabitatRenderer extends StatelessWidget {
 
         // Habitat items (will render in position based on item type)
         ...renderHabitatItems(),
+        if (habitat.items.isNotEmpty && renderHabitatItems().isEmpty)
+          Positioned(
+            top: 50,
+            left: 10,
+            right: 10,
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.red.withOpacity(0.15),
+                border: Border.all(color: Colors.redAccent),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: const Text(
+                'Debug: Habitat has items but none rendered (check positioning logic).',
+                style: TextStyle(fontSize: 12, color: Colors.red),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
 
         // Environmental elements
         if (habitat.hasWaste)
@@ -203,6 +222,26 @@ class HabitatRenderer extends StatelessWidget {
 
   List<Widget> renderHabitatItems() {
     List<Widget> itemWidgets = [];
+
+    // Always show bowls if habitat has food/water even without explicit item
+    if (habitat.hasWater) {
+      itemWidgets.add(
+        Positioned(
+          bottom: 25,
+          left: 20,
+          child: Icon(Icons.water_drop, size: 30, color: Colors.blue[400]),
+        ),
+      );
+    }
+    if (habitat.hasFood) {
+      itemWidgets.add(
+        Positioned(
+          bottom: 25,
+          left: 60,
+          child: Icon(Icons.rice_bowl, size: 32, color: Colors.orange[300]),
+        ),
+      );
+    }
 
     // Position items based on their type
     for (var item in habitat.items) {

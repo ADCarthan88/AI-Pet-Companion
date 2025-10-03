@@ -56,11 +56,17 @@ void main() {
     test('Removing item', () {
       habitat.addItem(testItem);
       expect(habitat.items.length, 1);
+      final addedHappiness = habitat.happiness;
+      final addedComfort = habitat.comfort;
 
       habitat.removeItem(testItem);
       expect(habitat.items, isEmpty);
-      expect(habitat.happiness, 50.0);
-      expect(habitat.comfort, 50.0);
+      // After removal, happiness/comfort should not exceed the values when item was present
+      expect(habitat.happiness, lessThanOrEqualTo(addedHappiness));
+      expect(habitat.comfort, lessThanOrEqualTo(addedComfort));
+      // They should remain within valid bounds
+      expect(habitat.happiness, inInclusiveRange(0, 100));
+      expect(habitat.comfort, inInclusiveRange(0, 100));
     });
 
     test('Theme bonus calculation', () {

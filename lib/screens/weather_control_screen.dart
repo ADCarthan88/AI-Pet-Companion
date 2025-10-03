@@ -224,9 +224,9 @@ class _WeatherControlScreenState extends State<WeatherControlScreen> {
               width: 60,
               height: 60,
               decoration: BoxDecoration(
-                color: isSelected
-                    ? Colors.blue.withOpacity(0.3)
-                    : Colors.grey.withOpacity(0.1),
+        color: isSelected
+          ? Colors.blue.withValues(alpha: 0.3)
+          : Colors.grey.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(30),
                 border: Border.all(
                   color: isSelected ? Colors.blue : Colors.transparent,

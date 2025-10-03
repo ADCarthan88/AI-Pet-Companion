@@ -1,9 +1,8 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import 'package:flame/game.dart';
 import '../models/pet.dart';
 import '../services/pet_sound_service.dart';
-import 'pet_animation_manager.dart';
+// Legacy PetAnimationManager import removed after refactor to generic animation handling.
 
 class AdvancedInteractivePetWidget extends StatefulWidget {
   final Pet pet;
@@ -25,19 +24,14 @@ class AdvancedInteractivePetWidget extends StatefulWidget {
 class _AdvancedInteractivePetWidgetState
     extends State<AdvancedInteractivePetWidget>
     with SingleTickerProviderStateMixin {
-  // Pet animation manager
-  late PetAnimationManager _petAnimationManager;
+  // Simplified: previously used PetAnimationManager (removed). Placeholder animation state only.
 
   // Pet sound service
   late PetSoundService _soundService;
 
   // Mouth animation controller
   late AnimationController _mouthController;
-  late Animation<double> _mouthAnimation;
-
-  // Track cursor position for following behavior
-  Offset? _cursorPosition;
-  bool _isFollowingCursor = false;
+  // (Removed unused mouth animation tween & cursor tracking after simplification)
   bool _isMouthOpen = false;
 
   // Track emotion display
@@ -48,9 +42,6 @@ class _AdvancedInteractivePetWidgetState
   void initState() {
     super.initState();
 
-    // Initialize pet animation manager
-    _petAnimationManager = PetAnimationManager(pet: widget.pet);
-
     // Initialize sound service
     _soundService = PetSoundService(pet: widget.pet);
 
@@ -60,9 +51,7 @@ class _AdvancedInteractivePetWidgetState
       duration: const Duration(milliseconds: 300),
     );
 
-    _mouthAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _mouthController, curve: Curves.easeInOut),
-    );
+    // Simple mouth animation controller retained (could drive future visuals)
 
     // Set up periodic emotion displays
     _scheduleRandomEmotionDisplay();
@@ -133,12 +122,6 @@ class _AdvancedInteractivePetWidgetState
 
   void _handlePetInteraction(Offset position) {
     setState(() {
-      _cursorPosition = position;
-      _isFollowingCursor = true;
-
-      // Update pet animation manager
-      _petAnimationManager.moveTo(Vector2(position.dx, position.dy));
-
       // Play appropriate sound
       _soundService.playSound('happy');
 
@@ -178,9 +161,6 @@ class _AdvancedInteractivePetWidgetState
 
   @override
   Widget build(BuildContext context) {
-    // Create the flame game widget for our pet animations
-    final gameWidget = GameWidget(game: _petAnimationManager);
-
     return GestureDetector(
       onTapDown: (TapDownDetails details) =>
           _handlePetInteraction(details.localPosition),
@@ -191,8 +171,21 @@ class _AdvancedInteractivePetWidgetState
       child: Stack(
         fit: StackFit.expand,
         children: [
-          // Pet animation
-          gameWidget,
+          // Placeholder pet visual (could integrate GenericPetAnimation later)
+          Center(
+            child: AnimatedScale(
+              scale: 1.0 + 0.02 * math.sin(DateTime.now().millisecondsSinceEpoch / 400.0),
+              duration: const Duration(milliseconds: 400),
+              child: CircleAvatar(
+                radius: 80,
+                backgroundColor: widget.pet.color.withOpacity(0.6),
+                child: Text(
+                  widget.pet.name.substring(0, 1),
+                  style: const TextStyle(fontSize: 48, color: Colors.white),
+                ),
+              ),
+            ),
+          ),
 
           // Emotion bubble (only shown when needed)
           if (_showingEmotion && _currentEmotionText != null)

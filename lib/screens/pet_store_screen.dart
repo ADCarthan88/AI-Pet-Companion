@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../utils/debug_log.dart';
 import '../models/pet.dart';
 import '../models/toy.dart';
 import '../widgets/toy_selection_widget.dart';
@@ -74,7 +75,7 @@ class _PetStoreScreenState extends State<PetStoreScreen>
 
   @override
   Widget build(BuildContext context) {
-    print('DEBUG: PetStoreScreen build called');
+  debugLog('PetStoreScreen build');
     return Scaffold(
       appBar: AppBar(
         title: const Text('Pet Store'),
@@ -111,7 +112,7 @@ class _PetStoreScreenState extends State<PetStoreScreen>
                       width: 200,
                       height: 200,
                       decoration: BoxDecoration(
-                        color: Colors.blue.withOpacity(0.1),
+                        color: Colors.blue.withValues(alpha: 0.1),
                         shape: BoxShape.circle,
                       ),
                       child: GestureDetector(
@@ -200,7 +201,7 @@ class _PetStoreScreenState extends State<PetStoreScreen>
                                         boxShadow: _previewPet!.color == color
                                             ? [
                                                 BoxShadow(
-                                                  color: color.withOpacity(0.5),
+                                                  color: color.withValues(alpha: 0.5),
                                                   blurRadius: 8,
                                                   spreadRadius: 2,
                                                 ),
@@ -356,26 +357,7 @@ class _PetStoreScreenState extends State<PetStoreScreen>
     );
   }
 
-  IconData _getPetIcon(PetType type) {
-    switch (type) {
-      case PetType.dog:
-        return Icons.pets;
-      case PetType.cat:
-        return Icons.copyright;
-      case PetType.bird:
-        return Icons.flutter_dash;
-      case PetType.rabbit:
-        return Icons.cruelty_free;
-      case PetType.lion:
-        return Icons.face;
-      case PetType.giraffe:
-        return Icons.height;
-      case PetType.penguin:
-        return Icons.water;
-      case PetType.panda:
-        return Icons.mood;
-    }
-  }
+  // _getPetIcon removed (unused) to satisfy analyzer.
 
   // Method to build pet visualization using the factory
   Widget _buildPetVisualization() {
@@ -414,7 +396,7 @@ class _PetStoreScreenState extends State<PetStoreScreen>
             right: 10,
             child: Icon(
               Icons.favorite,
-              color: Colors.red.withOpacity(0.7),
+              color: Colors.red.withValues(alpha: 0.7),
               size: 24,
             ),
           ),

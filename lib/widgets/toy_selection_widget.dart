@@ -5,7 +5,8 @@ import '../models/toy.dart';
 class ToySelectionWidget extends StatelessWidget {
   final Pet pet;
   final Function(Toy) onToySelected;
-  final void Function(Toy toy, Offset globalPosition, Velocity velocity)? onToyThrown;
+  final void Function(Toy toy, Offset globalPosition, Velocity velocity)?
+  onToyThrown;
 
   const ToySelectionWidget({
     super.key,

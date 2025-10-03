@@ -1,0 +1,15 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "validate-audio",
+			"type": "shell",
+			"command": "dart",
+			"args": [
+				"tool/validate_audio_assets.dart"
+			],
+			"problemMatcher": [],
+			"group": "build"
+		}
+	]
+}

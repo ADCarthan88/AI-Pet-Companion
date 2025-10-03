@@ -1,0 +1,55 @@
+# Auto-generated mapping for importing external animal sounds
+# Review before running import. Adjust or add real sleep/happy sounds where missing.
+# NOTE: Species still missing required baseline (happy & sleep) will trigger validator warnings.
+
+dog:
+  happy:
+    - dog-happy.mp3
+  sleep: dog-sleeping.mp3
+  sad: dog-sad.mp3
+  play: dog-attention.mp3
+  idle: dog-neutral.mp3
+  tired: dog-tired.mp3
+  water: dog-water.mp3
+
+cat:
+  happy:
+    - cat-happy.mp3
+    - purring.mp3
+  sad: cat-sad.mp3
+  idle: cat-neutral.mp3
+  hungry: cat-hungry.mp3
+  water: cat-water.mp3
+
+bird:
+  happy: bird-happy.mp3
+  sad: bird-sad.mp3
+  hungry: bird-hungry.mp3
+
+lion:
+  happy:
+    - lion-happy.mp3
+    - lion-purr.mp3
+  sleep: lion-tired.mp3   # using tired as sleep placeholder
+  sad: lion-sad.mp3
+  water: lion-water.mp3
+
+giraffe:
+  happy: giraffe.mp3
+
+penguin:
+  happy:
+    - penguin-happy.mp3
+    - penguin.mp3
+  hungry: penguin-hungry.mp3
+  water: "penguin-water - Copy.mp3"
+
+panda:
+  water: panda-water.mp3
+  # TODO: Add panda happy & sleep sounds
+
+# Unassigned source files remaining (consider mapping later):
+#  animal--water.mp3 (generic water ambience?)
+#  dog-drinking-water-9-fx-368980.mp3 (could be alternate water variant)
+#  sound-of-growling-bear-hd-263159.mp3 (maybe panda growl or generic angry)
+#  cat-meow-401729.mp3 (could be cat happy or play variant)

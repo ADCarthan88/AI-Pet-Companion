@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'pet.dart';
 
 enum TrickDifficulty { easy, medium, hard }

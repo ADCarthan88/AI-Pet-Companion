@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
 import 'screens/home_screen.dart';
+import 'config/app_config.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
+  // Enable test mode automatically in debug builds (assert only executes in debug)
+  assert(() {
+    AppConfig.testMode = true; // Infinite coins & relaxed constraints
+    return true;
+  }());
+  // In release, testMode remains false giving production starting coins.
   // Initialize app
   runApp(const MyApp());
 }

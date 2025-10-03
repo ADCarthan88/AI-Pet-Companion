@@ -3,7 +3,7 @@ import '../models/pet.dart';
 
 class EmotionBackdrop extends StatelessWidget {
   final PetMood mood;
-  const EmotionBackdrop({required this.mood});
+  const EmotionBackdrop({required this.mood, Key? key}) : super(key: key);
 
   String _getBackdropAsset(PetMood mood) {
     switch (mood) {
@@ -30,7 +30,7 @@ class EmotionBackdrop extends StatelessWidget {
           image: AssetImage(_getBackdropAsset(mood)),
           fit: BoxFit.cover,
           colorFilter: ColorFilter.mode(
-            Colors.black.withOpacity(0.15),
+            Colors.black.withValues(alpha: 0.15),
             BlendMode.darken,
           ),
         ),

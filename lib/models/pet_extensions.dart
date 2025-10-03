@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'pet.dart';
 
 // This file contains additions needed for the Pet class that were missing

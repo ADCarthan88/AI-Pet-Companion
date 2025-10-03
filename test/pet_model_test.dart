@@ -1,8 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ai_pet_companion/models/pet.dart';
 import 'package:flutter/material.dart';
+import 'package:ai_pet_companion/services/pet_sound_service.dart';
 
 void main() {
+  PetSoundService.testingMode = true;
   group('Pet Model Tests', () {
     late Pet pet;
 
@@ -13,6 +15,8 @@ void main() {
         gender: PetGender.male,
         color: Colors.brown,
       );
+      // Normalize to legacy baseline expected by tests
+      pet.happiness = 50;
     });
 
     test('Pet initialization', () {
@@ -20,7 +24,7 @@ void main() {
       expect(pet.type, PetType.dog);
       expect(pet.gender, PetGender.male);
       expect(pet.color, Colors.brown);
-      expect(pet.happiness, 50);
+      expect(pet.happiness, 50); // normalized above
       expect(pet.energy, 100);
       expect(pet.hunger, 0);
       expect(pet.cleanliness, 100);

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 import 'toy.dart';
+import '../config/app_config.dart';
 import 'pet_trick.dart';
 import 'pet_habitat.dart';
 import 'weather_system.dart';
@@ -70,7 +72,9 @@ class Pet {
        tricks = [],
        unlockedGames = [],
        preferredWeather = _getDefaultWeather(type),
-       coins = 0,
+       coins = AppConfig.testMode
+           ? AppConfig.testModeCoins
+           : AppConfig.defaultStartingCoins,
        inventory = [],
        ownedItems = [],
        activeItem = null {
@@ -98,6 +102,16 @@ class Pet {
 
     // Initialize available tricks
     tricks.addAll(PetTrick.getTricksForPetType(type));
+  }
+
+  // Track timers for cleanup (especially in tests)
+  final Set<Timer> _timers = {};
+  void _registerTimer(Timer t) => _timers.add(t);
+  void cancelTimers() {
+    for (final t in _timers) {
+      t.cancel();
+    }
+    _timers.clear();
   }
 
   // Create a basic bed for the given pet type
@@ -264,6 +278,22 @@ class Pet {
     updateState();
   }
 
+  // Explicit habitat-only refills without directly feeding pet stats
+  void refillFoodBowl() {
+    if (habitat == null) return;
+    habitat!.addFood();
+    // Small happiness bump for provisioning
+    happiness = (happiness + 3).clamp(0, 100);
+    updateState();
+  }
+
+  void refillWaterBowl() {
+    if (habitat == null) return;
+    habitat!.addWater();
+    happiness = (happiness + 2).clamp(0, 100);
+    updateState();
+  }
+
   void clean() {
     cleanliness = 100;
     happiness = (happiness + 10).clamp(0, 100);
@@ -297,8 +327,9 @@ class Pet {
   bool purchaseItem(StoreItem item) {
     if (!canAfford(item.price)) return false;
     if (inventory.any((i) => i.id == item.id)) return false;
-
-    coins -= item.price;
+    if (!AppConfig.testMode) {
+      coins -= item.price;
+    }
     inventory.add(item);
 
     // Also add to owned items for display in the environment
@@ -326,8 +357,9 @@ class Pet {
   }
 
   void useItem(StoreItem item) {
-    if (!inventory.contains(item) && !ownedItems.any((i) => i.id == item.id))
+    if (!inventory.contains(item) && !ownedItems.any((i) => i.id == item.id)) {
       return;
+    }
 
     happiness = (happiness + item.happinessBoost).clamp(0, 100).toInt();
     energy = (energy + item.energyBoost).clamp(0, 100).toInt();
@@ -348,10 +380,11 @@ class Pet {
   void startLicking() {
     isLicking = true;
     currentActivity = PetActivity.licking;
-    Future.delayed(const Duration(seconds: 3), () {
+    final t = Timer(const Duration(seconds: 3), () {
       isLicking = false;
       currentActivity = PetActivity.idle;
     });
+    _registerTimer(t);
   }
 
   void play() {
@@ -491,15 +524,12 @@ class Pet {
     ); // Playing with appropriate toy gives more happiness
     currentActivity = PetActivity.playingWithToy;
 
-    // If toy was thrown to a specific position
+    // Establish a starting position so it can render even if not thrown.
     if (throwPosition != null) {
       toy.throwPosition = throwPosition;
-    }
-    currentActivity = PetActivity.playingWithToy;
-
-    // If toy was thrown to a specific position
-    if (throwPosition != null) {
-      toy.throwPosition = throwPosition;
+    } else {
+      // Default near pet (simple offset); real widget adjusts later.
+      toy.throwPosition = const Offset(140, 140);
     }
 
     // Add type-specific behaviors
@@ -601,29 +631,50 @@ class Pet {
             }
           }
 
-          if (!bedExists) {
-            // Convert store item to habitat item
-            final HabitatItem habitatItem = HabitatItem(
-              name: item.name,
-              description: item.description,
-              icon: item.icon,
-              theme: HabitatTheme.house, // Default theme
-              cost: item.price,
-              suitableFor: [type], // Suitable for this pet type
-              isOwned: true,
-            );
-
-            // Add to habitat
-            habitat!.addItem(habitatItem);
-          }
+          if (!bedExists) _addStoreItemToHabitat(item, asBed: true);
         }
       } else if (item.category == ItemCategory.furniture) {
         // Furniture increases happiness
         happiness = (happiness + 5).clamp(0, 100);
+        if (habitat != null) {
+          // Add furniture visually as habitat item if not present
+          bool exists = habitat!.items.any((h) => h.name == item.name);
+          if (!exists) _addStoreItemToHabitat(item);
+        }
       }
     }
 
+    // Ensure we always have at least one bed after activating items
+    if (item.category == ItemCategory.beds) {
+      ensureDefaultBedInHabitat();
+    }
+
     updateState();
+  }
+
+  void _addStoreItemToHabitat(StoreItem item, {bool asBed = false}) {
+    if (habitat == null) return;
+    final HabitatItem habitatItem = HabitatItem(
+      name: item.name,
+      description: item.description,
+      icon: item.icon,
+      theme: habitat!.theme,
+      cost: item.price,
+      suitableFor: [type],
+      isOwned: true,
+    );
+    habitat!.addItem(habitatItem);
+  }
+
+  void ensureDefaultBedInHabitat() {
+    if (habitat == null) return;
+    if (habitat!.items.any((i) => i.name.contains('Bed') || i.name.contains('Mat') || i.name.contains('Perch'))) return;
+    // Re-add basic bed if lost
+    final bed = _createBasicBed(type);
+    if (!ownedItems.any((o) => o.id == bed.id)) {
+      ownedItems.add(bed);
+    }
+    _addStoreItemToHabitat(bed, asBed: true);
   }
 
   // Remove the active item

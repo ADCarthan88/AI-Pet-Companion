@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 import '../models/pet.dart';
 import '../models/pet_habitat.dart';
 import '../models/toy.dart';
 import '../models/weather_system.dart';
 import '../widgets/toy_selection_widget.dart';
 import '../widgets/advanced_interactive_pet_widget.dart';
+import '../widgets/habitat_renderer.dart';
 import '../widgets/pet_bathing_widget.dart';
 import '../widgets/petting_detector_widget.dart';
 import '../models/pet_extensions.dart';
@@ -12,6 +14,10 @@ import 'pet_store_screen.dart';
 import 'pet_supplies_store_screen.dart';
 import 'trick_training_screen.dart';
 import 'habitat_customization_screen.dart';
+import '../services/sound_settings_service.dart';
+import '../services/ambient_audio_service.dart' as ambient;
+import '../services/pet_sound_service.dart';
+import '../utils/debug_log.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -29,6 +35,10 @@ class _HomeScreenState extends State<HomeScreen>
 
   // Animation controller for pet licking animation
   late AnimationController _lickingController;
+  Timer? _initialUpdateTimer;
+  Timer? _periodicUpdateTimer;
+  ambient.AmbientAudioService? _ambientService;
+  Timer? _ambientTimer;
 
   @override
   void initState() {
@@ -55,14 +65,50 @@ class _HomeScreenState extends State<HomeScreen>
       vsync: this,
     );
 
-    // Set up a periodic timer to update pet state
-    Future.delayed(const Duration(seconds: 1), _updatePetState);
+    if (!PetSoundService.testingMode) {
+      _ambientService = ambient.AmbientAudioService();
+      _updateAmbient();
+      _ambientTimer = Timer.periodic(
+        const Duration(minutes: 2),
+        (_) => _updateAmbient(),
+      );
+    }
+
+    // Schedule initial update then start periodic updates
+    _initialUpdateTimer = Timer(const Duration(seconds: 1), () {
+      if (!mounted) return;
+      _updatePetState();
+      _startPeriodicUpdates();
+    });
   }
 
   @override
   void dispose() {
+    _initialUpdateTimer?.cancel();
+    _periodicUpdateTimer?.cancel();
+    _ambientTimer?.cancel();
+    _ambientService?.dispose();
+    for (final p in pets) {
+      p.cancelTimers();
+    }
     _lickingController.dispose();
     super.dispose();
+  }
+
+  void _updateAmbient() {
+    final habitat = currentPet.habitat ?? PetHabitat(petType: currentPet.type);
+    final hour = DateTime.now().hour;
+    ambient.DayPeriod period;
+    if (hour >= 5 && hour < 11) {
+      period = ambient.DayPeriod.morning;
+    } else if (hour >= 11 && hour < 17) {
+      period = ambient.DayPeriod.afternoon;
+    } else if (hour >= 17 && hour < 21) {
+      period = ambient.DayPeriod.evening;
+    } else {
+      period = ambient.DayPeriod.night;
+    }
+    _ambientService?.setContext(theme: habitat.theme, period: period);
   }
 
   void _updatePetState() {
@@ -74,15 +120,24 @@ class _HomeScreenState extends State<HomeScreen>
       }
     });
 
-    // Schedule the next update
-    Future.delayed(const Duration(seconds: 30), _updatePetState);
+    // (Periodic timer handles repeated scheduling)
+  }
+
+  void _startPeriodicUpdates() {
+    _periodicUpdateTimer?.cancel();
+    _periodicUpdateTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
+      if (!mounted) return;
+      _updatePetState();
+    });
   }
 
   Pet get currentPet => pets[_selectedPetIndex];
 
   void _feedPet() {
     setState(() {
+      // Feed pet (hunger reduction) and mark habitat food present.
       currentPet.feed();
+      currentPet.addFoodToHabitat();
     });
   }
 
@@ -213,6 +268,10 @@ class _HomeScreenState extends State<HomeScreen>
               );
             },
           ),
+          IconButton(
+            icon: const Icon(Icons.volume_up),
+            onPressed: () => _showSoundSettings(),
+          ),
         ],
       ),
       body: Stack(
@@ -238,23 +297,11 @@ class _HomeScreenState extends State<HomeScreen>
               builder: (context, candidateData, rejectedData) {
                 return const SizedBox.expand();
               },
-              onAccept: (Toy toy) {
+              onAcceptWithDetails: (details) {
                 setState(() {
-                  // Calculate the position relative to the screen size
                   final RenderBox box = context.findRenderObject() as RenderBox;
-                  final Offset localPosition = box.globalToLocal(Offset.zero);
-
-                  // This passes both the toy and where it was thrown
-                  currentPet.playWithToy(toy, throwPosition: localPosition);
-
-                  // Trigger the pet to move toward this position
-                  if (currentPet.currentToy != null &&
-                      currentPet.currentToy!.throwPosition != null) {
-                    // This toy throw position will be used by the AdvancedInteractivePetWidget
-                    print(
-                      'Toy thrown to: ${currentPet.currentToy!.throwPosition}',
-                    );
-                  }
+                  final Offset localPosition = box.globalToLocal(details.offset);
+                  currentPet.playWithToy(details.data, throwPosition: localPosition);
                 });
               },
             ),
@@ -264,47 +311,48 @@ class _HomeScreenState extends State<HomeScreen>
               Expanded(
                 child: Stack(
                   children: [
-                    // Weather effects overlay if needed
-                    if (currentPet.habitat?.currentWeather != null)
-                      _buildWeatherOverlay(currentPet.habitat!.currentWeather),
-
-                    // Petting detector wraps the pet visualization
+                    if (currentPet.habitat != null)
+                      Positioned.fill(
+                        child: HabitatRenderer(
+                          habitat: currentPet.habitat!,
+                          pet: currentPet,
+                        ),
+                      ),
+                    // Overlay pet interaction widget on top of habitat renderer
                     KeyedSubtree(
                       key: _petAreaKey,
-                      child: PettingDetectorWidget(
-                        pet: currentPet,
-                        onPetting: (isPetting) {
-                          if (isPetting) {
-                            setState(() {
-                              currentPet.happiness = (currentPet.happiness + 1).clamp(0, 100);
-                              if (currentPet.happiness > 90) {
-                                currentPet.mood = PetMood.loving;
-                              } else if (currentPet.happiness > 70) {
-                                currentPet.mood = PetMood.happy;
-                              }
-                            });
-                          }
-                        },
-                        child: Center(
+                      child: Align(
+                        alignment: Alignment.center,
+                        child: PettingDetectorWidget(
+                          pet: currentPet,
+                          onPetting: (isPetting) {
+                            if (isPetting) {
+                              setState(() {
+                                currentPet.happiness = (currentPet.happiness + 1)
+                                    .clamp(0, 100);
+                                if (currentPet.happiness > 90) {
+                                  currentPet.mood = PetMood.loving;
+                                } else if (currentPet.happiness > 70) {
+                                  currentPet.mood = PetMood.happy;
+                                }
+                              });
+                            }
+                          },
                           child: AdvancedInteractivePetWidget(
                             pet: currentPet,
                             onTap: () {
-                              // Toggle licking animation when pet is tapped
                               if (!currentPet.isLicking) {
                                 setState(() {
                                   currentPet.startLicking();
                                   _lickingController.forward(from: 0).then((_) {
                                     _lickingController.reverse().then((_) {
-                                      setState(() {
-                                        currentPet.stopLicking();
-                                      });
+                                      setState(() => currentPet.stopLicking());
                                     });
                                   });
                                 });
                               }
                             },
                             onLongPress: () {
-                              // Show mood/emotion dialog
                               showDialog(
                                 context: context,
                                 builder: (context) => AlertDialog(
@@ -329,7 +377,7 @@ class _HomeScreenState extends State<HomeScreen>
 
               // Bottom area for actions and toys
               Container(
-                color: Colors.white.withOpacity(0.8),
+                color: Colors.white.withValues(alpha: 0.8),
                 padding: const EdgeInsets.all(8.0),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -338,6 +386,12 @@ class _HomeScreenState extends State<HomeScreen>
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         _buildActionButton('Feed', () => _feedPet()),
+                        _buildActionButton('Refill Food', () {
+                          setState(() => currentPet.refillFoodBowl());
+                        }),
+                        _buildActionButton('Refill Water', () {
+                          setState(() => currentPet.refillWaterBowl());
+                        }),
                         _buildActionButton('Bathe', () => _bathePet()),
                         _buildActionButton(
                           'Habitat',
@@ -359,24 +413,24 @@ class _HomeScreenState extends State<HomeScreen>
                       ToySelectionWidget(
                         pet: currentPet,
                         onToySelected: (toy) {
-                          print('DEBUG: Toy selected: ${toy.name}');
+                          debugLog('Toy selected: ${toy.name}');
                           setState(() {
                             if (currentPet.currentActivity ==
                                     PetActivity.playingWithToy &&
                                 currentPet.currentToy == toy) {
-                              print(
-                                'DEBUG: Stopping play with toy: ${toy.name}',
-                              );
+                              debugLog('Stopping play with toy: ${toy.name}');
                               currentPet.stopPlayingWithToy();
                             } else {
-                              print('DEBUG: Playing with toy: ${toy.name}');
+                              debugLog('Playing with toy: ${toy.name}');
                               currentPet.playWithToy(toy);
                             }
                           });
                         },
                         onToyThrown: (toy, globalPos, velocity) {
                           // Convert global position to local pet area coordinates
-                          final renderBox = _petAreaKey.currentContext?.findRenderObject() as RenderBox?;
+                          final renderBox =
+                              _petAreaKey.currentContext?.findRenderObject()
+                                  as RenderBox?;
                           if (renderBox != null) {
                             final local = renderBox.globalToLocal(globalPos);
                             setState(() {
@@ -409,8 +463,8 @@ class _HomeScreenState extends State<HomeScreen>
                                 width: 60,
                                 margin: const EdgeInsets.all(5),
                                 decoration: BoxDecoration(
-                                  color: _selectedPetIndex == index
-                                      ? Colors.blue.withOpacity(0.3)
+                  color: _selectedPetIndex == index
+                    ? Colors.blue.withValues(alpha: 0.3)
                                       : Colors.transparent,
                                   borderRadius: BorderRadius.circular(10),
                                 ),
@@ -471,6 +525,7 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
+  // ignore: unused_element
   Widget _buildWeatherOverlay(WeatherType weatherType) {
     switch (weatherType) {
       case WeatherType.sunny:
@@ -493,8 +548,8 @@ class _HomeScreenState extends State<HomeScreen>
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            Colors.blueGrey.withOpacity(0.3),
-            Colors.blueGrey.withOpacity(0.1),
+            Colors.blueGrey.withValues(alpha: 0.3),
+            Colors.blueGrey.withValues(alpha: 0.1),
           ],
         ),
       ),
@@ -508,8 +563,8 @@ class _HomeScreenState extends State<HomeScreen>
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            Colors.white.withOpacity(0.3),
-            Colors.white.withOpacity(0.1),
+            Colors.white.withValues(alpha: 0.3),
+            Colors.white.withValues(alpha: 0.1),
           ],
         ),
       ),
@@ -522,7 +577,7 @@ class _HomeScreenState extends State<HomeScreen>
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [Colors.grey.withOpacity(0.3), Colors.grey.withOpacity(0.1)],
+          colors: [Colors.grey.withValues(alpha: 0.3), Colors.grey.withValues(alpha: 0.1)],
         ),
       ),
     );
@@ -535,8 +590,8 @@ class _HomeScreenState extends State<HomeScreen>
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            Colors.indigo.withOpacity(0.3),
-            Colors.indigo.withOpacity(0.1),
+            Colors.indigo.withValues(alpha: 0.3),
+            Colors.indigo.withValues(alpha: 0.1),
           ],
         ),
       ),
@@ -583,5 +638,83 @@ class _HomeScreenState extends State<HomeScreen>
 
   Widget _buildActionButton(String label, VoidCallback onPressed) {
     return ElevatedButton(onPressed: onPressed, child: Text(label));
+  }
+
+  void _showSoundSettings() {
+    final service = SoundSettingsService();
+    service.ensureLoaded();
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.volume_up),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Sound Settings',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const Spacer(),
+                      IconButton(
+                        icon: Icon(
+                          service.muted ? Icons.volume_off : Icons.volume_mute,
+                        ),
+                        onPressed: () async {
+                          await service.setMuted(!service.muted);
+                          setModalState(() {});
+                        },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Master Volume: ${(service.masterVolume * 100).round()}%',
+                  ),
+                  Slider(
+                    value: service.masterVolume,
+                    onChanged: (v) async {
+                      await service.setVolume(v);
+                      setModalState(() {});
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Checkbox(
+                        value: service.muted,
+                        onChanged: (v) async {
+                          await service.setMuted(v ?? false);
+                          setModalState(() {});
+                        },
+                      ),
+                      const Text('Mute All'),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Close'),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 }
