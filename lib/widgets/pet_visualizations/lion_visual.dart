@@ -83,7 +83,11 @@ class LionPainter extends CustomPainter {
           (HSLColor.fromColor(color).lightness - 0.2).clamp(0.0, 1.0),
         )
         .toColor();
-    final maneColor = color.withRed((color.red + 20).clamp(0, 255));
+    // Replace deprecated channel getter usage; compute new red channel based on fractional .r
+    final int _origR = (color.r * 255.0).round();
+    final maneColor = color.withValues(
+      red: ((_origR + 20).clamp(0, 255)) / 255.0,
+    );
 
     final Paint paint = Paint()
       ..color = lionColor

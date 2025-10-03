@@ -132,7 +132,8 @@ class _ParticlesPainter extends CustomPainter {
           : lifeT > 0.9
           ? (1 - (lifeT - 0.9) / 0.1)
           : 1.0;
-  paint.color = p.color.withValues(alpha: p.color.opacity * fade);
+  // Use .a (fractional alpha) instead of deprecated .opacity
+  paint.color = p.color.withValues(alpha: p.color.a * fade);
       canvas.drawCircle(p.pos, p.r, paint);
     }
   }

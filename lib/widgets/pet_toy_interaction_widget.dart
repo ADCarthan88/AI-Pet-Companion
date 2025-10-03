@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:math' as math;
 import '../models/pet.dart';
 import '../models/toy.dart';
 
@@ -24,7 +23,6 @@ class _PetToyInteractionWidgetState extends State<PetToyInteractionWidget>
     with SingleTickerProviderStateMixin {
   Offset _petPosition = Offset.zero;
   Offset? _targetPosition;
-  double _animationValue = 0.0;
   late AnimationController _controller;
 
   @override

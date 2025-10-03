@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter/material.dart';
 import 'package:ai_pet_companion/models/store_catalog.dart';
 import 'package:ai_pet_companion/models/store_item.dart';
 import 'package:ai_pet_companion/models/pet.dart';

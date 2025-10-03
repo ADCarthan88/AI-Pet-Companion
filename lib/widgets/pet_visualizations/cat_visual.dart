@@ -79,11 +79,7 @@ class CatPainter extends CustomPainter {
           (HSLColor.fromColor(color).lightness - 0.2).clamp(0.0, 1.0),
         )
         .toColor();
-    final lightColor = HSLColor.fromColor(color)
-        .withLightness(
-          (HSLColor.fromColor(color).lightness + 0.1).clamp(0.0, 1.0),
-        )
-        .toColor();
+    // Removed previous light highlight color (unused)
 
     final paint = Paint()
       ..color = catColor
@@ -93,9 +89,7 @@ class CatPainter extends CustomPainter {
       ..color = darkColor
       ..style = PaintingStyle.fill;
 
-    final lightPaint = Paint()
-      ..color = lightColor
-      ..style = PaintingStyle.fill;
+    // Removed unused lightPaint (lightColor retained for potential future shading logic)
 
     final blackPaint = Paint()
       ..color = Colors.black87

@@ -130,8 +130,6 @@ class PetOwnedItemsWidget extends StatelessWidget {
         return Colors.green;
       case ItemCategory.weatherItems:
         return Colors.lightBlue;
-      default:
-        return Colors.grey;
     }
   }
 }
