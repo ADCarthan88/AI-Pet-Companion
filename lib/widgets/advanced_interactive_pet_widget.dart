@@ -10,16 +10,16 @@ import '../utils/pet_anchors.dart';
 /// A more advanced widget for displaying interactive pets
 /// This is a simplified version to get the basic app working
 class AdvancedInteractivePetWidget extends StatefulWidget {
-  final Pet pet;
-  final VoidCallback? onTap;
-  final VoidCallback? onLongPress;
-
   const AdvancedInteractivePetWidget({
-    Key? key,
+    super.key,
     required this.pet,
     this.onTap,
     this.onLongPress,
-  }) : super(key: key);
+  });
+
+  final Pet pet;
+  final VoidCallback? onTap;
+  final VoidCallback? onLongPress;
 
   @override
   State<AdvancedInteractivePetWidget> createState() =>

@@ -327,17 +327,19 @@ class _PetStoreScreenState extends State<PetStoreScreen>
 
                       // Add a small delay for the animation effect
                       Future.delayed(const Duration(milliseconds: 500), () {
-                        // Pass a new Pet instance to avoid reference issues
+                        if (!mounted) return; // Guard against async gap context use
                         final chosenPet = Pet(
                           name: name,
                           type: _previewPet!.type,
                           gender: _previewPet!.gender,
                           color: _previewPet!.color,
-                          happiness: 80, // Start with a happy pet
+                          happiness: 80,
                           mood: PetMood.happy,
                         );
                         widget.onPetSelected(chosenPet);
-                        Navigator.pop(context);
+                        if (Navigator.canPop(context)) {
+                          Navigator.pop(context);
+                        }
                       });
                     },
                     label: const Text(

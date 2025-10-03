@@ -12,8 +12,8 @@ class PetInteractionManager {
   double _petSize = 150;
 
   // Movement parameters
-  double _movementSpeed = 2.0; // pixels per frame
-  double _movementSpeedBoost = 2.0; // multiplier for running
+  final double _movementSpeed = 2.0; // pixels per frame
+  final double _movementSpeedBoost = 2.0; // multiplier for running
 
   // Animation state
   bool _isMoving = false;
