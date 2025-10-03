@@ -1,8 +1,11 @@
+// import_external_audio tool script
+library import_external_audio;
+
 /// Utility script to copy/normalize external animal sound files
 /// from a user-provided directory (outside repo) into the structured
-/// assets/sounds/<species>/ directories.
+/// `assets/sounds/<species>/` directories.
 ///
-/// Usage:
+/// Usage: 
 ///   dart tool/import_external_audio.dart --source "C:/Users/adamc/animal-sounds" \
 ///       --species dog --map happy=dog_happy1.mp3 sleep=dog_sleep.mp3
 ///
@@ -10,7 +13,8 @@
 ///   dart tool/import_external_audio.dart --source "C:/.../animal-sounds" --species dog \
 ///       --manifest mapping.yaml
 ///
-/// mapping.yaml example:
+/// mapping.yaml example: 
+/// ```yaml
 /// dog:
 ///   happy:
 ///     - dog_happy1.mp3
@@ -18,6 +22,7 @@
 ///   sleep: dog_sleep.mp3
 /// cat:
 ///   happy: cat_purr.mp3
+/// ```
 ///
 /// The script will:
 /// 1. Verify source files exist.
@@ -26,7 +31,7 @@
 /// 4. Print a summary of imported files.
 ///
 /// After importing, run (if new folders added):
-///   flutter pub get
+///   flutter pub get 
 /// Then rebuild the app.
 import 'dart:io';
 import 'package:yaml/yaml.dart';
@@ -75,7 +80,7 @@ void main(List<String> args) async {
   // Parse inline --map entries: action=filename.mp3
   final inlineMaps = argMap['map'] as List<String>?;
   final singleSpecies = argMap['species'];
-  if (inlineMaps != null && singleSpecies == null) {
+  if (inlineMaps != null && singleSpecies == null) { 
     stderr.writeln('ERROR: --map requires --species');
     exit(2);
   }
@@ -106,7 +111,7 @@ void main(List<String> args) async {
   int copied = 0;
   int skipped = 0;
 
-  for (final sp in mapping.keys) {
+  for (final sp in mapping.keys) { 
     final speciesDest = Directory('${destRoot.path}/$sp');
     if (!speciesDest.existsSync()) {
       speciesDest.createSync(recursive: true);
@@ -117,7 +122,7 @@ void main(List<String> args) async {
       for (int i = 0; i < files.length; i++) {
         final srcName = files[i];
         final srcFile = File('${sourceDir.path}/$srcName');
-        if (!srcFile.existsSync()) {
+          if (!srcFile.existsSync()) { 
           stderr.writeln(
             'WARN: Source file missing for $sp/$action -> $srcName',
           );

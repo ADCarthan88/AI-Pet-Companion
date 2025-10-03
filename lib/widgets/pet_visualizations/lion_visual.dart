@@ -84,9 +84,9 @@ class LionPainter extends CustomPainter {
         )
         .toColor();
     // Replace deprecated channel getter usage; compute new red channel based on fractional .r
-    final int _origR = (color.r * 255.0).round();
+    final int redBase = (color.r * 255.0).round();
     final maneColor = color.withValues(
-      red: ((_origR + 20).clamp(0, 255)) / 255.0,
+      red: ((redBase + 20).clamp(0, 255)) / 255.0,
     );
 
     final Paint paint = Paint()

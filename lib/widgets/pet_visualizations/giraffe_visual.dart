@@ -105,11 +105,11 @@ class GiraffePainter extends CustomPainter {
     // Colors
     final baseColor = color;
   // Replace deprecated channel getters .red/.green using fractional components .r/.g
-  final int _r = (color.r * 255.0).round();
-  final int _g = (color.g * 255.0).round();
-  final spotColor = color
-    .withValues(red: ((_r - 40).clamp(0, 255)) / 255.0)
-    .withValues(green: ((_g - 40).clamp(0, 255)) / 255.0);
+    final int redCh = (color.r * 255.0).round();
+    final int greenCh = (color.g * 255.0).round();
+    final spotColor = color
+        .withValues(red: ((redCh - 40).clamp(0, 255)) / 255.0)
+        .withValues(green: ((greenCh - 40).clamp(0, 255)) / 255.0);
     final darkColor = HSLColor.fromColor(color)
         .withLightness(
           (HSLColor.fromColor(color).lightness - 0.2).clamp(0.0, 1.0),
