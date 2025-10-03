@@ -106,7 +106,7 @@ class RabbitPainter extends CustomPainter {
     canvas.drawCircle(
       Offset(center.dx + radius * 0.8, center.dy + radius * 0.5),
       radius * 0.25,
-      Paint()..color = Colors.white.withOpacity(0.9),
+  Paint()..color = Colors.white.withValues(alpha: 0.9),
     );
 
     // Front legs
@@ -185,7 +185,7 @@ class RabbitPainter extends CustomPainter {
 
     // Inner ear color
     final innerEarPaint = Paint()
-      ..color = color.withOpacity(0.5)
+  ..color = color.withValues(alpha: 0.5)
       ..style = PaintingStyle.fill;
 
     // Left inner ear

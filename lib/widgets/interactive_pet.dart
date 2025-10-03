@@ -433,23 +433,23 @@ class PetBackgroundPainter extends CustomPainter {
 
     switch (mood) {
       case PetMood.happy:
-        paint.color = Colors.lightBlue.withOpacity(0.2);
+        paint.color = Colors.lightBlue.withValues(alpha: 0.2);
         break;
       case PetMood.sad:
-        paint.color = Colors.blueGrey.withOpacity(0.2);
+        paint.color = Colors.blueGrey.withValues(alpha: 0.2);
         break;
       case PetMood.excited:
-        paint.color = Colors.amber.withOpacity(0.2);
+        paint.color = Colors.amber.withValues(alpha: 0.2);
         break;
       case PetMood.tired:
-        paint.color = Colors.indigo.withOpacity(0.2);
+        paint.color = Colors.indigo.withValues(alpha: 0.2);
         break;
       case PetMood.loving:
-        paint.color = Colors.pink.withOpacity(0.2);
+        paint.color = Colors.pink.withValues(alpha: 0.2);
         break;
       case PetMood.neutral:
       default:
-        paint.color = Colors.green.withOpacity(0.2);
+        paint.color = Colors.green.withValues(alpha: 0.2);
     }
 
     canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), paint);

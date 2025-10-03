@@ -38,7 +38,7 @@ class PenguinVisual extends StatelessWidget {
                     ),
                   );
                 },
-                splashColor: Colors.lightBlue.withOpacity(0.3),
+                splashColor: Colors.lightBlue.withValues(alpha: 0.3),
                 child: Container(), // Empty container for tap detection
               ),
             ),

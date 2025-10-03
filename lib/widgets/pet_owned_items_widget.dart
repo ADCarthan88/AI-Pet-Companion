@@ -75,7 +75,7 @@ class PetOwnedItemsWidget extends StatelessWidget {
                           boxShadow: isActive
                               ? [
                                   BoxShadow(
-                                    color: Colors.blue.withOpacity(0.8),
+                                    color: Colors.blue.withValues(alpha: 0.8),
                                     blurRadius: 10,
                                     spreadRadius: 3,
                                   ),

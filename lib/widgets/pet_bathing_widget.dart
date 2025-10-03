@@ -91,7 +91,7 @@ class _PetBathingWidgetState extends State<PetBathingWidget>
                 child: Container(
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Colors.blue.withOpacity(0.2),
+                    color: Colors.blue.withValues(alpha: 0.2),
                   ),
                   child: AnimatedOpacity(
                     opacity: _isDrying ? 0.7 : 1.0,
@@ -163,7 +163,7 @@ class _WaterPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.blue.withOpacity(0.6)
+  ..color = Colors.blue.withValues(alpha: 0.6)
       ..strokeWidth = 2.0;
 
     // Draw water streams
@@ -194,7 +194,7 @@ class _DryingPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.white.withOpacity(0.3)
+  ..color = Colors.white.withValues(alpha: 0.3)
       ..strokeWidth = 1.5;
 
     // Draw wind/air lines
@@ -297,7 +297,7 @@ class _BubbleEffectState extends State<_BubbleEffect>
                   width: _sizes[index],
                   height: _sizes[index],
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.7),
+                    color: Colors.white.withValues(alpha: 0.7),
                     shape: BoxShape.circle,
                   ),
                 ),

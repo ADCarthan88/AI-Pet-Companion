@@ -178,7 +178,7 @@ class _AdvancedInteractivePetWidgetState
               duration: const Duration(milliseconds: 400),
               child: CircleAvatar(
                 radius: 80,
-                backgroundColor: widget.pet.color.withOpacity(0.6),
+                backgroundColor: widget.pet.color.withValues(alpha: 0.6),
                 child: Text(
                   widget.pet.name.substring(0, 1),
                   style: const TextStyle(fontSize: 48, color: Colors.white),

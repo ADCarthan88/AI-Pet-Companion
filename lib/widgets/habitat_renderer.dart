@@ -76,7 +76,7 @@ class HabitatRenderer extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Colors.red.withOpacity(0.15),
+                color: Colors.red.withValues(alpha: 0.15),
                 border: Border.all(color: Colors.redAccent),
                 borderRadius: BorderRadius.circular(6),
               ),
@@ -335,7 +335,7 @@ class HabitatRenderer extends StatelessWidget {
                   borderRadius: BorderRadius.circular(10),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
+                      color: Colors.black.withValues(alpha: 0.2),
                       spreadRadius: 1,
                       blurRadius: 3,
                       offset: const Offset(0, 2),
@@ -398,7 +398,7 @@ class HabitatRenderer extends StatelessWidget {
                 color: Colors.amber[300],
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.amber[100]!.withOpacity(0.8),
+                    color: Colors.amber[100]!.withValues(alpha: 0.8),
                     blurRadius: 30,
                     spreadRadius: 20,
                   ),
@@ -420,7 +420,7 @@ class HabitatRenderer extends StatelessWidget {
                 width: 2,
                 height: random.nextDouble() * 15 + 10, // Vary raindrop length
                 decoration: BoxDecoration(
-                  color: Colors.blue[200]!.withOpacity(0.7),
+                  color: Colors.blue[200]!.withValues(alpha: 0.7),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -440,7 +440,7 @@ class HabitatRenderer extends StatelessWidget {
                 '❄',
                 style: TextStyle(
                   fontSize: random.nextDouble() * 10 + 10,
-                  color: Colors.white.withOpacity(0.8),
+                  color: Colors.white.withValues(alpha: 0.8),
                 ),
               ),
             ),
@@ -458,7 +458,7 @@ class HabitatRenderer extends StatelessWidget {
               child: Icon(
                 Icons.cloud,
                 size: random.nextDouble() * 40 + 30,
-                color: Colors.white.withOpacity(0.7),
+                color: Colors.white.withValues(alpha: 0.7),
               ),
             ),
           );
@@ -475,7 +475,7 @@ class HabitatRenderer extends StatelessWidget {
               child: Icon(
                 Icons.cloud,
                 size: random.nextDouble() * 40 + 30,
-                color: Colors.blueGrey[700]!.withOpacity(0.8),
+                color: Colors.blueGrey[700]!.withValues(alpha: 0.8),
               ),
             ),
           );

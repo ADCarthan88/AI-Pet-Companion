@@ -274,7 +274,7 @@ class GiraffePainter extends CustomPainter {
 
     // Horns/ossicones
     final hornPaint = Paint()
-      ..color = baseColor.withOpacity(0.8)
+  ..color = baseColor.withValues(alpha: 0.8)
       ..style = PaintingStyle.fill;
 
     // Left horn

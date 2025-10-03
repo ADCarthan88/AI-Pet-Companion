@@ -143,7 +143,7 @@ class _PettingTrailPainter extends CustomPainter {
     if (points.length < 2) return;
 
     final paint = Paint()
-      ..color = Colors.white.withOpacity(0.3)
+  ..color = Colors.white.withValues(alpha: 0.3)
       ..strokeWidth = 10
       ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke;

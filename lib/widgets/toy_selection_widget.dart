@@ -61,7 +61,7 @@ class ToySelectionWidget extends StatelessWidget {
                         width: 50,
                         height: 50,
                         decoration: BoxDecoration(
-                          color: toy.color.withOpacity(0.5),
+                          color: toy.color.withValues(alpha: 0.5),
                           shape: BoxShape.circle,
                         ),
                       ),

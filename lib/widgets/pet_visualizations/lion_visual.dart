@@ -177,7 +177,7 @@ class LionPainter extends CustomPainter {
       manePaint,
     ); // Face
     final facePaint = Paint()
-      ..color = color.withOpacity(0.85)
+  ..color = color.withValues(alpha: 0.85)
       ..style = PaintingStyle.fill;
 
     canvas.drawCircle(center, radius * 0.85, facePaint);
@@ -316,7 +316,7 @@ class LionPainter extends CustomPainter {
 
     // Whiskers for lion (subtle)
     final whiskerPaint = Paint()
-      ..color = Colors.black.withOpacity(0.5)
+  ..color = Colors.black.withValues(alpha: 0.5)
       ..strokeWidth = 1
       ..style = PaintingStyle.stroke;
 

@@ -61,7 +61,7 @@ class WeatherEffectsWidget extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.5),
+              color: Colors.black.withValues(alpha: 0.5),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Row(
@@ -163,7 +163,7 @@ class WeatherEffectsWidget extends StatelessWidget {
                 color: Colors.amber[300],
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.amber[100]!.withOpacity(0.8),
+                    color: Colors.amber[100]!.withValues(alpha: 0.8),
                     blurRadius: 30,
                     spreadRadius: 20,
                   ),
@@ -205,7 +205,7 @@ class WeatherEffectsWidget extends StatelessWidget {
                 '❄',
                 style: TextStyle(
                   fontSize: random.nextInt(10) + 10.0,
-                  color: Colors.white.withOpacity(0.8),
+                  color: Colors.white.withValues(alpha: 0.8),
                 ),
               ),
             ),
@@ -223,7 +223,7 @@ class WeatherEffectsWidget extends StatelessWidget {
               child: Icon(
                 Icons.cloud,
                 size: random.nextInt(50) + 50.0,
-                color: Colors.white.withOpacity(0.8),
+                color: Colors.white.withValues(alpha: 0.8),
               ),
             ),
           );
@@ -240,7 +240,7 @@ class WeatherEffectsWidget extends StatelessWidget {
               child: Icon(
                 Icons.cloud,
                 size: random.nextInt(50) + 50.0,
-                color: Colors.blueGrey[700]!.withOpacity(0.8),
+                color: Colors.blueGrey[700]!.withValues(alpha: 0.8),
               ),
             ),
           );

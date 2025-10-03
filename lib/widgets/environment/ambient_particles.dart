@@ -77,11 +77,11 @@ class _AmbientParticlesState extends State<AmbientParticles> {
                   : (0.05 + _rand.nextDouble() * 0.15)),
         life: 0,
   maxLife: (3500 + _rand.nextInt(5500)).toDouble(),
-        color: isFirefly
-            ? Colors.yellowAccent.withOpacity(0.85)
-            : isSnow
-            ? Colors.white.withOpacity(0.95)
-            : Colors.white.withOpacity(0.18 + _rand.nextDouble() * 0.15),
+    color: isFirefly
+      ? Colors.yellowAccent.withValues(alpha: 0.85)
+      : isSnow
+        ? Colors.white.withValues(alpha: 0.95)
+        : Colors.white.withValues(alpha: 0.18 + _rand.nextDouble() * 0.15),
       ),
     );
   }
@@ -132,7 +132,7 @@ class _ParticlesPainter extends CustomPainter {
           : lifeT > 0.9
           ? (1 - (lifeT - 0.9) / 0.1)
           : 1.0;
-      paint.color = p.color.withOpacity(p.color.opacity * fade);
+  paint.color = p.color.withValues(alpha: p.color.opacity * fade);
       canvas.drawCircle(p.pos, p.r, paint);
     }
   }

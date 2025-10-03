@@ -45,7 +45,7 @@ class PetEnvironmentItemsWidget extends StatelessWidget {
           child: Container(
             padding: EdgeInsets.all(size * 0.03),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.7),
+              color: Colors.white.withValues(alpha: 0.7),
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -76,7 +76,7 @@ class PetEnvironmentItemsWidget extends StatelessWidget {
               borderRadius: BorderRadius.circular(size * 0.05),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.2),
+                  color: Colors.black.withValues(alpha: 0.2),
                   spreadRadius: 1,
                   blurRadius: 3,
                   offset: const Offset(0, 2),
@@ -137,7 +137,7 @@ class PetEnvironmentItemsWidget extends StatelessWidget {
               border: Border.all(color: Colors.grey.shade400, width: 2),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
+                  color: Colors.black.withValues(alpha: 0.1),
                   spreadRadius: 1,
                   blurRadius: 2,
                 ),
@@ -204,7 +204,7 @@ class PetEnvironmentItemsWidget extends StatelessWidget {
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.2),
+              color: Colors.black.withValues(alpha: 0.2),
               spreadRadius: 1,
               blurRadius: 3,
             ),
@@ -244,7 +244,7 @@ class PetEnvironmentItemsWidget extends StatelessWidget {
                 borderRadius: BorderRadius.circular(size * 0.01),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.2),
+                    color: Colors.black.withValues(alpha: 0.2),
                     spreadRadius: 1,
                     blurRadius: 2,
                     offset: const Offset(0, 1),
@@ -299,7 +299,7 @@ class PetEnvironmentItemsWidget extends StatelessWidget {
                 borderRadius: BorderRadius.circular(size * 0.15),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.2),
+                    color: Colors.black.withValues(alpha: 0.2),
                     blurRadius: 4,
                     offset: const Offset(0, 2),
                   ),
@@ -354,7 +354,7 @@ class PetEnvironmentItemsWidget extends StatelessWidget {
                 borderRadius: BorderRadius.circular(size * 0.05),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.2),
+                    color: Colors.black.withValues(alpha: 0.2),
                     blurRadius: 2,
                   ),
                 ],
@@ -440,7 +440,7 @@ class PetEnvironmentItemsWidget extends StatelessWidget {
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.3),
+                    color: Colors.black.withValues(alpha: 0.3),
                     blurRadius: 4,
                     offset: const Offset(0, 2),
                   ),
@@ -485,7 +485,7 @@ class PetEnvironmentItemsWidget extends StatelessWidget {
                 borderRadius: BorderRadius.circular(size * 0.18),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
+                    color: Colors.black.withValues(alpha: 0.1),
                     blurRadius: 4,
                   ),
                 ],
@@ -499,7 +499,7 @@ class PetEnvironmentItemsWidget extends StatelessWidget {
                 width: size * 0.12,
                 height: size * 0.12,
                 decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.7),
+                  color: Colors.black.withValues(alpha: 0.7),
                   borderRadius: BorderRadius.only(
                     topLeft: Radius.circular(size * 0.06),
                     topRight: Radius.circular(size * 0.06),
@@ -515,7 +515,7 @@ class PetEnvironmentItemsWidget extends StatelessWidget {
                 width: size * 0.05,
                 height: size * 0.05,
                 decoration: BoxDecoration(
-                  color: Colors.red.withOpacity(0.8),
+                  color: Colors.red.withValues(alpha: 0.8),
                   shape: BoxShape.circle,
                 ),
               ),
@@ -555,7 +555,7 @@ class PetEnvironmentItemsWidget extends StatelessWidget {
                     width: size * 0.06,
                     height: size * 0.06,
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.8),
+                      color: Colors.white.withValues(alpha: 0.8),
                       shape: BoxShape.circle,
                     ),
                   ),
@@ -575,12 +575,12 @@ class PetEnvironmentItemsWidget extends StatelessWidget {
         height: size * 0.25,
         child: Container(
           decoration: BoxDecoration(
-            color: weatherColor.withOpacity(0.7),
+            color: weatherColor.withValues(alpha: 0.7),
             borderRadius: BorderRadius.circular(size * 0.05),
             border: Border.all(color: _getDarkerColor(weatherColor), width: 2),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.2),
+                color: Colors.black.withValues(alpha: 0.2),
                 blurRadius: 4,
                 offset: const Offset(0, 2),
               ),
@@ -635,7 +635,7 @@ class PetEnvironmentItemsWidget extends StatelessWidget {
         height: size * 0.15,
         child: Container(
           decoration: BoxDecoration(
-            color: accessoryColor.withOpacity(0.8),
+            color: accessoryColor.withValues(alpha: 0.8),
             borderRadius: BorderRadius.circular(size * 0.03),
           ),
           child: Center(
@@ -685,7 +685,7 @@ class PetEnvironmentItemsWidget extends StatelessWidget {
           bottomRight: Radius.circular(size * 0.01),
         ),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 2),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 2),
         ],
       ),
       child: Column(
