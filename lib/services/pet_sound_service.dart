@@ -1,11 +1,10 @@
 import 'package:audioplayers/audioplayers.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import '../models/pet.dart';
 import 'sound_settings_service.dart';
 import 'dart:async';
 import 'dart:convert';
-import 'dart:typed_data';
+// dart:typed_data not needed; Uint8List available via foundation
 import 'dart:io';
 import 'audio_manifest_service.dart';
 
@@ -101,7 +100,7 @@ class PetSoundService {
     } catch (e) {
       if (!_missingLogged.contains(assetPath)) {
         _missingLogged.add(assetPath);
-        debugPrint('AUDIO WARN: Missing or failed asset "$assetPath" ($e) -> silent fallback');
+  debugPrint('AUDIO WARN: Missing or failed asset $assetPath ($e) -> silent fallback');
       }
       await _audioPlayer.play(BytesSource(_silentBytes), volume: vol);
     }
