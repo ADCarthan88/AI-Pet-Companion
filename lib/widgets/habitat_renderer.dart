@@ -4,13 +4,19 @@ import '../models/pet_habitat.dart';
 import '../models/pet.dart';
 import '../models/store_item.dart';
 import '../models/weather_system.dart';
-import 'pet_visualizations/pet_visualization_factory.dart';
+import '../services/badge_service.dart';
 
 class HabitatRenderer extends StatelessWidget {
   final PetHabitat habitat;
   final Pet pet;
+  final Widget? child; // Pet widget to render inside habitat
 
-  const HabitatRenderer({super.key, required this.habitat, required this.pet});
+  const HabitatRenderer({
+    super.key, 
+    required this.habitat, 
+    required this.pet,
+    this.child,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -35,28 +41,52 @@ class HabitatRenderer extends StatelessWidget {
         // Weather effects
         ...renderWeatherEffects(),
 
-        // Pet Visualization
+        // Pet widget positioned within the habitat
         Positioned(
-          bottom: hasBed ? 70 : 60, // Position slightly higher when on bed
-          left: hasBed ? 150 : null, // Position on bed if bed is active
-          right: hasBed ? null : 120, // Position on right if no bed
+          bottom: pet.currentActivity == PetActivity.sleeping && hasBed ? 80 : 100,
+          left: pet.currentActivity == PetActivity.sleeping && hasBed ? 160 : null,
+          right: pet.currentActivity == PetActivity.sleeping && hasBed ? null : 150,
           width: 120,
           height: 120,
-          child: PetVisualizationFactory.getPetVisualization(
-            pet: pet,
-            isBlinking: false,
-            mouthOpen: pet.currentActivity == PetActivity.eating,
-            size: 120,
-          ),
+          child: child ?? const SizedBox.shrink(),
         ),
 
+        // Pet interaction area for bed sleeping (invisible tap zone)
+        if (hasBed)
+          Positioned(
+            bottom: 70,
+            left: 150,
+            width: 120,
+            height: 120,
+            child: GestureDetector(
+              onTap: () {
+                // Toggle sleeping when tapping bed area
+                if (pet.currentActivity != PetActivity.sleeping) {
+                  pet.currentActivity = PetActivity.sleeping;
+                  pet.energy = (pet.energy + 10).clamp(0, 100);
+                  BadgeService.instance.increment(
+                    'sleep_sessions',
+                    threshold: 3,
+                    badgeId: 'Catnapper',
+                  );
+                } else {
+                  pet.currentActivity = PetActivity.idle;
+                }
+              },
+              child: Container(
+                // Invisible interaction area
+                color: Colors.transparent,
+              ),
+            ),
+          ),
+
         // Background image (if available)
-        if (habitat.background.isNotEmpty)
+        if (habitat.background != null && habitat.background!.isNotEmpty)
           Positioned.fill(
             child: Opacity(
               opacity: 0.7, // Slightly transparent to blend with the colors
               child: Image.asset(
-                habitat.background,
+                habitat.background!,
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) {
                   // Fallback if image doesn't exist yet
@@ -127,9 +157,9 @@ class HabitatRenderer extends StatelessWidget {
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(
-                    Icons.water_drop,
+                  _buildWaterBowlIcon(
                     color: habitat.hasWater ? Colors.blue : Colors.grey,
+                    size: 24,
                   ),
                   const SizedBox(width: 4),
                   const Text('Water'),
@@ -141,9 +171,9 @@ class HabitatRenderer extends StatelessWidget {
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(
-                    Icons.restaurant,
-                    color: habitat.hasFood ? Colors.green : Colors.grey,
+                  _buildFoodBowlIcon(
+                    color: habitat.hasFood ? Colors.orange : Colors.grey,
+                    size: 24,
                   ),
                   const SizedBox(width: 4),
                   const Text('Food'),
@@ -229,7 +259,20 @@ class HabitatRenderer extends StatelessWidget {
         Positioned(
           bottom: 25,
           left: 20,
-          child: Icon(Icons.water_drop, size: 30, color: Colors.blue[400]),
+          child: GestureDetector(
+            onTap: () {
+              // Drinking behavior
+              pet.energy = (pet.energy + 5).clamp(0, 100);
+              pet.cleanliness = (pet.cleanliness + 2).clamp(0, 100);
+              pet.happiness = (pet.happiness + 2).clamp(0, 100);
+              BadgeService.instance.increment(
+                'care_actions',
+                threshold: 10,
+                badgeId: 'Caretaker I',
+              );
+            },
+            child: _buildWaterBowlIcon(color: Colors.blue, size: 30),
+          ),
         ),
       );
     }
@@ -238,7 +281,26 @@ class HabitatRenderer extends StatelessWidget {
         Positioned(
           bottom: 25,
           left: 60,
-          child: Icon(Icons.rice_bowl, size: 32, color: Colors.orange[300]),
+          child: GestureDetector(
+            onTap: () {
+              // Eating behavior
+              pet.hunger = (pet.hunger - 15).clamp(0, 100);
+              pet.happiness = (pet.happiness + 5).clamp(0, 100);
+              pet.currentActivity = PetActivity.eating;
+              BadgeService.instance.increment(
+                'feeding_actions',
+                threshold: 5,
+                badgeId: 'Feeder',
+              );
+              Future.delayed(const Duration(seconds: 2), () {
+                // Return to idle if still eating
+                if (pet.currentActivity == PetActivity.eating) {
+                  pet.currentActivity = PetActivity.idle;
+                }
+              });
+            },
+            child: _buildFoodBowlIcon(color: Colors.orange, size: 32),
+          ),
         ),
       );
     }
@@ -325,25 +387,15 @@ class HabitatRenderer extends StatelessWidget {
         case 'Luxury Panda Bed':
           itemWidgets.add(
             Positioned(
-              bottom: 30,
+              bottom: 40,
               left: 120,
               width: 150,
-              height: 70,
-              child: Container(
-                decoration: BoxDecoration(
+              height: 80,
+              child: CustomPaint(
+                size: const Size(150, 80),
+                painter: PetBedPainter(
                   color: _getItemColor(item),
-                  borderRadius: BorderRadius.circular(10),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.2),
-                      spreadRadius: 1,
-                      blurRadius: 3,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Center(
-                  child: Icon(item.icon, size: 30, color: Colors.white),
+                  bedType: _getBedType(item.name),
                 ),
               ),
             ),
@@ -577,6 +629,16 @@ class HabitatRenderer extends StatelessWidget {
     }
   }
 
+  BedType _getBedType(String bedName) {
+    if (bedName.toLowerCase().contains('premium') || bedName.toLowerCase().contains('luxury')) {
+      return BedType.luxury;
+    } else if (bedName.toLowerCase().contains('deluxe')) {
+      return BedType.deluxe;
+    } else {
+      return BedType.basic;
+    }
+  }
+
   Color _getCleanlinessColor() {
     if (habitat.cleanliness > 70) {
       return Colors.green;
@@ -659,4 +721,445 @@ class HabitatRenderer extends StatelessWidget {
       ),
     );
   }
+
+  // Custom water bowl icon widget
+  Widget _buildWaterBowlIcon({required Color color, required double size}) {
+    return CustomPaint(
+      size: Size(size, size * 0.6),
+      painter: WaterBowlPainter(color: color),
+    );
+  }
+
+  // Custom food bowl icon widget
+  Widget _buildFoodBowlIcon({required Color color, required double size}) {
+    return CustomPaint(
+      size: Size(size, size * 0.6),
+      painter: FoodBowlPainter(color: color),
+    );
+  }
+}
+
+// Enhanced 3D water bowl painter
+class WaterBowlPainter extends CustomPainter {
+  final Color color;
+
+  WaterBowlPainter({required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final centerX = size.width / 2;
+    final centerY = size.height * 0.7;
+    final bowlRadius = size.width * 0.45;
+    
+    // Create gradient for 3D bowl effect
+    final bowlGradient = RadialGradient(
+      center: const Alignment(-0.3, -0.5),
+      radius: 1.2,
+      colors: [
+        color.withValues(alpha: 0.3),
+        color,
+        color.withValues(alpha: 0.7),
+      ],
+      stops: const [0.0, 0.7, 1.0],
+    );
+
+    // Bowl shadow (behind)
+    final shadowPaint = Paint()
+      ..color = Colors.black.withValues(alpha: 0.3)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
+    
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: Offset(centerX + 2, centerY + 4),
+        width: bowlRadius * 2.2,
+        height: bowlRadius * 0.8,
+      ),
+      shadowPaint,
+    );
+
+    // Main bowl with gradient
+    final bowlPaint = Paint()
+      ..shader = bowlGradient.createShader(
+        Rect.fromCenter(
+          center: Offset(centerX, centerY),
+          width: bowlRadius * 2,
+          height: bowlRadius * 0.7,
+        ),
+      );
+
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: Offset(centerX, centerY),
+        width: bowlRadius * 2,
+        height: bowlRadius * 0.7,
+      ),
+      bowlPaint,
+    );
+
+    // Bowl rim highlight
+    final rimPaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.6)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2;
+
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: Offset(centerX, centerY),
+        width: bowlRadius * 2,
+        height: bowlRadius * 0.7,
+      ),
+      rimPaint,
+    );
+
+    // Water with realistic reflection
+    final waterGradient = RadialGradient(
+      center: const Alignment(-0.4, -0.6),
+      radius: 1.0,
+      colors: [
+        Colors.lightBlue[100]!,
+        Colors.blue[300]!,
+        Colors.blue[600]!,
+      ],
+      stops: const [0.0, 0.5, 1.0],
+    );
+
+    final waterPaint = Paint()
+      ..shader = waterGradient.createShader(
+        Rect.fromCenter(
+          center: Offset(centerX, centerY - 2),
+          width: bowlRadius * 1.6,
+          height: bowlRadius * 0.4,
+        ),
+      );
+
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: Offset(centerX, centerY - 2),
+        width: bowlRadius * 1.6,
+        height: bowlRadius * 0.4,
+      ),
+      waterPaint,
+    );
+
+    // Water highlight (reflection)
+    final highlightPaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.4);
+
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: Offset(centerX - bowlRadius * 0.3, centerY - 6),
+        width: bowlRadius * 0.4,
+        height: bowlRadius * 0.1,
+      ),
+      highlightPaint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant WaterBowlPainter oldDelegate) => 
+      oldDelegate.color != color;
+}
+
+// Enhanced 3D food bowl painter
+class FoodBowlPainter extends CustomPainter {
+  final Color color;
+
+  FoodBowlPainter({required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final centerX = size.width / 2;
+    final centerY = size.height * 0.7;
+    final bowlRadius = size.width * 0.45;
+    
+    // Create gradient for 3D bowl effect
+    final bowlGradient = RadialGradient(
+      center: const Alignment(-0.3, -0.5),
+      radius: 1.2,
+      colors: [
+        color.withValues(alpha: 0.3),
+        color,
+        color.withValues(alpha: 0.7),
+      ],
+      stops: const [0.0, 0.7, 1.0],
+    );
+
+    // Bowl shadow (behind)
+    final shadowPaint = Paint()
+      ..color = Colors.black.withValues(alpha: 0.3)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
+    
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: Offset(centerX + 2, centerY + 4),
+        width: bowlRadius * 2.2,
+        height: bowlRadius * 0.8,
+      ),
+      shadowPaint,
+    );
+
+    // Main bowl with gradient
+    final bowlPaint = Paint()
+      ..shader = bowlGradient.createShader(
+        Rect.fromCenter(
+          center: Offset(centerX, centerY),
+          width: bowlRadius * 2,
+          height: bowlRadius * 0.7,
+        ),
+      );
+
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: Offset(centerX, centerY),
+        width: bowlRadius * 2,
+        height: bowlRadius * 0.7,
+      ),
+      bowlPaint,
+    );
+
+    // Bowl rim highlight
+    final rimPaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.6)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2;
+
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: Offset(centerX, centerY),
+        width: bowlRadius * 2,
+        height: bowlRadius * 0.7,
+      ),
+      rimPaint,
+    );
+
+    // Enhanced 3D kibbles with shadows and highlights
+    final kibblePositions = [
+      Offset(centerX - bowlRadius * 0.4, centerY - 4),
+      Offset(centerX + bowlRadius * 0.2, centerY - 6),
+      Offset(centerX - bowlRadius * 0.1, centerY - 2),
+      Offset(centerX + bowlRadius * 0.4, centerY - 1),
+      Offset(centerX - bowlRadius * 0.3, centerY + 2),
+      Offset(centerX + bowlRadius * 0.1, centerY + 3),
+      Offset(centerX + bowlRadius * 0.3, centerY + 1),
+      Offset(centerX - bowlRadius * 0.2, centerY - 1),
+    ];
+
+    for (final pos in kibblePositions) {
+      // Kibble shadow
+      final shadowKibblePaint = Paint()
+        ..color = Colors.black.withValues(alpha: 0.3);
+      canvas.drawCircle(Offset(pos.dx + 1, pos.dy + 2), 3, shadowKibblePaint);
+
+      // Main kibble with gradient
+      final kibbleGradient = RadialGradient(
+        colors: [
+          Colors.brown[300]!,
+          Colors.brown[600]!,
+          Colors.brown[800]!,
+        ],
+        stops: const [0.2, 0.7, 1.0],
+      );
+
+      final kibblePaint = Paint()
+        ..shader = kibbleGradient.createShader(
+          Rect.fromCenter(center: pos, width: 6, height: 6),
+        );
+      
+      canvas.drawCircle(pos, 3, kibblePaint);
+
+      // Kibble highlight
+      final highlightPaint = Paint()
+        ..color = Colors.brown[200]!.withValues(alpha: 0.8);
+      canvas.drawCircle(Offset(pos.dx - 1, pos.dy - 1), 1, highlightPaint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant FoodBowlPainter oldDelegate) => 
+      oldDelegate.color != color;
+}
+
+// Bed types for different appearances
+enum BedType { basic, deluxe, luxury }
+
+// Enhanced 3D pet bed painter
+class PetBedPainter extends CustomPainter {
+  final Color color;
+  final BedType bedType;
+
+  PetBedPainter({required this.color, required this.bedType});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final centerX = size.width / 2;
+    final centerY = size.height * 0.8;
+    final bedWidth = size.width * 0.9;
+    final bedHeight = size.height * 0.4;
+
+    // Bed shadow
+    final shadowPaint = Paint()
+      ..color = Colors.black.withValues(alpha: 0.3)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
+    
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(
+          center: Offset(centerX + 3, centerY + 5),
+          width: bedWidth + 6,
+          height: bedHeight + 3,
+        ),
+        const Radius.circular(15),
+      ),
+      shadowPaint,
+    );
+
+    // Main bed base with gradient
+    final bedGradient = LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: [
+        color.withValues(alpha: 0.4),
+        color,
+        color.withValues(alpha: 0.8),
+      ],
+      stops: const [0.0, 0.5, 1.0],
+    );
+
+    final bedPaint = Paint()
+      ..shader = bedGradient.createShader(
+        Rect.fromCenter(
+          center: Offset(centerX, centerY),
+          width: bedWidth,
+          height: bedHeight,
+        ),
+      );
+
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(
+          center: Offset(centerX, centerY),
+          width: bedWidth,
+          height: bedHeight,
+        ),
+        const Radius.circular(12),
+      ),
+      bedPaint,
+    );
+
+    // Bed cushion/pillow (different styles based on type)
+    _drawCushion(canvas, size, centerX, centerY, bedWidth, bedHeight);
+
+    // Bed rim/border highlight
+    final rimPaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.5)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2;
+
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(
+          center: Offset(centerX, centerY),
+          width: bedWidth,
+          height: bedHeight,
+        ),
+        const Radius.circular(12),
+      ),
+      rimPaint,
+    );
+  }
+
+  void _drawCushion(Canvas canvas, Size size, double centerX, double centerY, 
+                   double bedWidth, double bedHeight) {
+    final cushionWidth = bedWidth * 0.8;
+    final cushionHeight = bedHeight * 0.6;
+
+    Color cushionColor;
+    double cushionRadius;
+    
+    switch (bedType) {
+      case BedType.basic:
+        cushionColor = Colors.grey[300]!;
+        cushionRadius = 8;
+        break;
+      case BedType.deluxe:
+        cushionColor = Colors.blue[200]!;
+        cushionRadius = 10;
+        break;
+      case BedType.luxury:
+        cushionColor = Colors.purple[200]!;
+        cushionRadius = 12;
+        break;
+    }
+
+    // Cushion gradient
+    final cushionGradient = RadialGradient(
+      center: const Alignment(-0.3, -0.4),
+      radius: 1.2,
+      colors: [
+        cushionColor.withValues(alpha: 0.6),
+        cushionColor,
+        cushionColor.withValues(alpha: 0.8),
+      ],
+      stops: const [0.0, 0.6, 1.0],
+    );
+
+    final cushionPaint = Paint()
+      ..shader = cushionGradient.createShader(
+        Rect.fromCenter(
+          center: Offset(centerX, centerY - 3),
+          width: cushionWidth,
+          height: cushionHeight,
+        ),
+      );
+
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(
+          center: Offset(centerX, centerY - 3),
+          width: cushionWidth,
+          height: cushionHeight,
+        ),
+        Radius.circular(cushionRadius),
+      ),
+      cushionPaint,
+    );
+
+    // Cushion stitching lines for luxury beds
+    if (bedType == BedType.luxury) {
+      final stitchPaint = Paint()
+        ..color = Colors.purple[400]!.withValues(alpha: 0.7)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1;
+
+      // Cross-hatch pattern
+      for (int i = 1; i < 4; i++) {
+        final x = centerX - cushionWidth * 0.3 + (i * cushionWidth * 0.2);
+        canvas.drawLine(
+          Offset(x, centerY - cushionHeight * 0.2),
+          Offset(x, centerY + cushionHeight * 0.1),
+          stitchPaint,
+        );
+      }
+    }
+
+    // Highlight on cushion
+    final highlightPaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.4);
+
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(
+          center: Offset(centerX - cushionWidth * 0.2, centerY - 8),
+          width: cushionWidth * 0.4,
+          height: cushionHeight * 0.3,
+        ),
+        Radius.circular(cushionRadius * 0.7),
+      ),
+      highlightPaint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant PetBedPainter oldDelegate) => 
+      oldDelegate.color != color || oldDelegate.bedType != bedType;
 }

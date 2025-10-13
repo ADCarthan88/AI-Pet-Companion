@@ -3,7 +3,7 @@ import '../utils/debug_log.dart';
 import '../models/pet.dart';
 import '../models/toy.dart';
 import '../widgets/toy_selection_widget.dart';
-import '../widgets/pet_visualizations/pet_visualization_factory.dart';
+import '../widgets/pet_idle_animator.dart';
 
 class PetStoreScreen extends StatefulWidget {
   final Function(Pet) onPetSelected;
@@ -124,7 +124,14 @@ class _PetStoreScreenState extends State<PetStoreScreen>
                             _previewPet!.mood = PetMood.happy;
                           });
                         },
-                        child: _buildPetVisualization(),
+                      child: _previewPet == null
+                          ? const SizedBox()
+                          : PetIdleAnimator(
+                              pet: _previewPet!,
+                              baseSize: 120,
+                              active: _previewPet!.currentActivity ==
+                                  PetActivity.idle,
+                            ),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -326,21 +333,22 @@ class _PetStoreScreenState extends State<PetStoreScreen>
                       });
 
                       // Add a small delay for the animation effect
-                      Future.delayed(const Duration(milliseconds: 500), () {
-                        if (!mounted) return; // Guard against async gap context use
-                        final chosenPet = Pet(
-                          name: name,
-                          type: _previewPet!.type,
-                          gender: _previewPet!.gender,
-                          color: _previewPet!.color,
-                          happiness: 80,
-                          mood: PetMood.happy,
-                        );
-                        widget.onPetSelected(chosenPet);
-                        if (Navigator.canPop(context)) {
-                          Navigator.pop(context);
-                        }
-                      });
+                           Future.delayed(const Duration(milliseconds: 500), () {
+                             if (!mounted) return; // Guard against async gap context use
+                             final chosenPet = Pet(
+                               name: name,
+                               type: _previewPet!.type,
+                               gender: _previewPet!.gender,
+                               color: _previewPet!.color,
+                               happiness: 80,
+                               mood: PetMood.happy,
+                             );
+                             widget.onPetSelected(chosenPet);
+                             if (!mounted) return; // re-check before navigator calls
+                             if (Navigator.canPop(context)) {
+                               Navigator.pop(context);
+                             }
+                           });
                     },
                     label: const Text(
                       'Choose This Pet',
@@ -361,50 +369,7 @@ class _PetStoreScreenState extends State<PetStoreScreen>
 
   // _getPetIcon removed (unused) to satisfy analyzer.
 
-  // Method to build pet visualization using the factory
-  Widget _buildPetVisualization() {
-    if (_previewPet == null) {
-      return const SizedBox.shrink();
-    }
-
-    // We'll use a slightly animated version with random blinking for the store display
-    final now = DateTime.now().millisecondsSinceEpoch;
-    final isBlinking = (now % 3000) < 200; // Blink briefly every 3 seconds
-    final mouthOpen =
-        _previewPet!.mood == PetMood.happy; // Open mouth when happy
-
-    return Stack(
-      children: [
-        // Use the PetVisualizationFactory for consistent appearance
-        Positioned.fill(
-          child: Center(
-            child: SizedBox(
-              width: 180,
-              height: 180,
-              child: PetVisualizationFactory.getPetVisualization(
-                pet: _previewPet!,
-                isBlinking: isBlinking,
-                mouthOpen: mouthOpen,
-                size: 180,
-              ),
-            ),
-          ),
-        ),
-
-        // Show mood indicator
-        if (_previewPet!.mood == PetMood.happy)
-          Positioned(
-            top: 10,
-            right: 10,
-            child: Icon(
-              Icons.favorite,
-              color: Colors.red.withValues(alpha: 0.7),
-              size: 24,
-            ),
-          ),
-      ],
-    );
-  }
+  // _buildPetVisualization replaced by PetIdleAnimator usage.
 
   @override
   void dispose() {

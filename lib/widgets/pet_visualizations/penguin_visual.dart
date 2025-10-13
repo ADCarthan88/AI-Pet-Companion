@@ -3,18 +3,18 @@ import 'dart:math' as math;
 import '../../models/pet.dart';
 
 class PenguinVisual extends StatelessWidget {
-  final Pet pet;
-  final bool isBlinking;
-  final bool mouthOpen;
-  final double size;
-
   const PenguinVisual({
+    super.key,
     required this.pet,
     required this.isBlinking,
     required this.mouthOpen,
     required this.size,
-    Key? key,
-  }) : super(key: key);
+  });
+
+  final Pet pet;
+  final bool isBlinking;
+  final bool mouthOpen;
+  final double size;
 
   @override
   Widget build(BuildContext context) {

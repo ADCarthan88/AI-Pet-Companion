@@ -187,6 +187,8 @@ class PetBehaviorService {
         return 'clean';
       case PetActivity.beingBrushed:
         return 'brush';
+      case PetActivity.walking:
+        return 'walk';
     }
   }
 

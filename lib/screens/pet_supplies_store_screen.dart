@@ -3,14 +3,14 @@ import '../models/pet.dart';
 import '../models/store_item.dart';
 
 class PetSuppliesStoreScreen extends StatefulWidget {
-  final Pet pet;
-  final Function(StoreItem) onItemPurchased;
-
   const PetSuppliesStoreScreen({
-    Key? key,
+    super.key,
     required this.pet,
     required this.onItemPurchased,
-  }) : super(key: key);
+  });
+
+  final Pet pet;
+  final Function(StoreItem) onItemPurchased;
 
   @override
   State<PetSuppliesStoreScreen> createState() => _PetSuppliesStoreScreenState();

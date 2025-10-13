@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../models/pet.dart';
-import '../services/pet_sound_service.dart';
+import '../services/new_audio_service.dart';
 // Legacy PetAnimationManager import removed after refactor to generic animation handling.
 
 class AdvancedInteractivePetWidget extends StatefulWidget {
@@ -174,7 +174,10 @@ class _AdvancedInteractivePetWidgetState
           // Placeholder pet visual (could integrate GenericPetAnimation later)
           Center(
             child: AnimatedScale(
-              scale: 1.0 + 0.02 * math.sin(DateTime.now().millisecondsSinceEpoch / 400.0),
+              scale:
+                  1.0 +
+                  0.02 *
+                      math.sin(DateTime.now().millisecondsSinceEpoch / 400.0),
               duration: const Duration(milliseconds: 400),
               child: CircleAvatar(
                 radius: 80,

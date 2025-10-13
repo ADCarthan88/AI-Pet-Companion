@@ -17,15 +17,15 @@ void main() {
         'sound_muted': true,
       });
       final service = SoundSettingsService();
-      await service.ensureLoaded();
+      service.ensureLoaded();
       expect(service.masterVolume, closeTo(0.4, 0.0001));
       expect(service.muted, isTrue);
     });
 
     test('setVolume persists value', () async {
       final service = SoundSettingsService();
-      await service.ensureLoaded();
-      await service.setVolume(0.33);
+      service.ensureLoaded();
+      service.setVolume(0.33);
       final prefs = await SharedPreferences.getInstance();
       expect(prefs.getDouble('sound_master_volume'), closeTo(0.33, 0.0001));
       expect(service.masterVolume, closeTo(0.33, 0.0001));
@@ -33,8 +33,8 @@ void main() {
 
     test('setMuted persists value', () async {
       final service = SoundSettingsService();
-      await service.ensureLoaded();
-      await service.setMuted(true);
+      service.ensureLoaded();
+      service.setMuted(true);
       final prefs = await SharedPreferences.getInstance();
       expect(prefs.getBool('sound_muted'), isTrue);
       expect(service.muted, isTrue);

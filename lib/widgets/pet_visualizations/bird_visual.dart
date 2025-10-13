@@ -2,18 +2,18 @@ import 'package:flutter/material.dart';
 import '../../models/pet.dart';
 
 class BirdVisual extends StatelessWidget {
-  final Pet pet;
-  final bool isBlinking;
-  final bool mouthOpen;
-  final double size;
-
   const BirdVisual({
+    super.key,
     required this.pet,
     required this.isBlinking,
     required this.mouthOpen,
     required this.size,
-    Key? key,
-  }) : super(key: key);
+  });
+
+  final Pet pet;
+  final bool isBlinking;
+  final bool mouthOpen;
+  final double size;
 
   @override
   Widget build(BuildContext context) {

@@ -1,10 +1,9 @@
 import 'package:audioplayers/audioplayers.dart';
 import 'dart:async';
-import 'dart:convert';
 import 'dart:typed_data';
 import '../models/pet_habitat.dart';
 import 'sound_settings_service.dart';
-import 'pet_sound_service.dart';
+import 'new_audio_service.dart';
 
 enum DayPeriod { morning, afternoon, evening, night }
 
@@ -20,27 +19,17 @@ class AmbientAudioService {
   static const _fadeDuration = Duration(seconds: 3);
   // bool _initialized = false; // reserved for future warm-up logic
 
-  static const String _silentMp3Base64 =
-      'SUQzAwAAAAAAQlRDTgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA//uQZAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAACAAACcQCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgP//7kGQBUAAAADAAAABAAAARKgAAAAAAAASW5mbwAAABwAAAABAAABNwCqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqv/7kGQBcAAAAGAAAABAAAARKgAAAAAAAEluZm8AAAASAAAAAQAAAQcAqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqr/+5BkAXAAAABgAAAAQAAABEqAAAAAAAAA==';
-  late final Uint8List _silentBytes = _initSilent();
+  late final Uint8List _silentBytes = Uint8List(
+    0,
+  ); // Use empty bytes to avoid base64 issues
 
-  Uint8List _initSilent() {
-    // In test mode we avoid base64 decoding so widget tests don't choke on format issues.
-    if (PetSoundService.testingMode) {
-      return Uint8List(0); // Will result in silent no-op plays.
-    }
-    try {
-      return base64Decode(_silentMp3Base64);
-    } catch (_) {
-      return Uint8List(0);
-    }
-  }
+  // Removed _initSilent method - using empty bytes directly
 
   Future<void> setContext({
     required HabitatTheme theme,
     required DayPeriod period,
   }) async {
-    if (PetSoundService.testingMode) return; // Suppress ambient in tests
+    if (NewAudioService.testingMode) return; // Suppress ambient in tests
     final changed = theme != _currentTheme || period != _currentPeriod;
     if (!changed) return;
     _currentTheme = theme;

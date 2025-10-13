@@ -256,12 +256,21 @@ class PetHabitat {
   bool hasFood;
   Color floorColor;
   Color wallColor;
-  String background;
+  String? background;
   WeatherType currentWeather;
 
   // Interactive elements
   bool hasInteractiveElements;
   List<String> interactiveElements;
+  
+  // Habitat Aging System
+  double overallWear; // 0-100, affects happiness and comfort
+  Map<String, double> itemWear; // Individual item wear levels
+  List<String> damageMarks; // Scratches, stains, etc.
+  DateTime lastMaintenance;
+  int daysWithoutCleaning;
+  bool hasPestInfestation;
+  double moldLevel; // From excessive moisture/poor ventilation
 
   PetHabitat({
     required this.petType,
@@ -291,7 +300,14 @@ class PetHabitat {
        background =
            background ??
            _getDefaultBackground(petType, theme ?? getDefaultTheme(petType)),
-       interactiveElements = [];
+       interactiveElements = [],
+       overallWear = 0.0,
+       itemWear = {},
+       damageMarks = [],
+       lastMaintenance = DateTime.now(),
+       daysWithoutCleaning = 0,
+       hasPestInfestation = false,
+       moldLevel = 0.0;
 
   void addItem(HabitatItem item) {
     if (item.suitableFor.contains(petType)) {
@@ -351,8 +367,18 @@ class PetHabitat {
     insectCount = 0;
     hasWaste = false;
     lastCleaned = DateTime.now();
+    daysWithoutCleaning = 0;
+    
+    // Cleaning reduces some aging effects
+    moldLevel = (moldLevel * 0.3).clamp(0, 10); // Cleaning removes most mold
+    if (moldLevel < 1) moldLevel = 0;
+    
     calculateHappinessAndComfort();
   }
+  
+
+  
+
 
   void addWater() {
     hasWater = true;
@@ -390,6 +416,85 @@ class PetHabitat {
     }
   }
 
+  // Update habitat aging over time
+  void updateAging() {
+    final now = DateTime.now();
+    final daysSinceLastMaintenance = now.difference(lastMaintenance).inDays;
+    final hoursSinceLastCleaned = now.difference(lastCleaned).inHours;
+    
+    // Increase overall wear gradually
+    overallWear = (overallWear + 0.1 * daysSinceLastMaintenance).clamp(0, 100);
+    
+    // Track days without cleaning
+    if (hoursSinceLastCleaned >= 24) {
+      daysWithoutCleaning = hoursSinceLastCleaned ~/ 24;
+    }
+    
+    // Add damage based on pet type and activity
+    _addNaturalWear();
+    
+    // Check for pest problems
+    if (daysWithoutCleaning > 7 && cleanliness < 30) {
+      hasPestInfestation = true;
+      insectCount = (insectCount + 2).clamp(0, 20);
+    }
+    
+    // Mold growth in damp conditions
+    if (hasWater && cleanliness < 40 && daysWithoutCleaning > 5) {
+      moldLevel = (moldLevel + 0.5).clamp(0, 10);
+    }
+    
+    // Age individual items
+    for (var item in items) {
+      final currentWear = itemWear[item.name] ?? 0.0;
+      itemWear[item.name] = (currentWear + 0.05).clamp(0, 100);
+    }
+  }
+  
+  // Add wear based on pet behavior
+  void _addNaturalWear() {
+    final random = DateTime.now().millisecondsSinceEpoch % 100;
+    
+    switch (petType) {
+      case PetType.cat:
+        if (random < 15) {
+          damageMarks.add('Scratch mark on ${_getRandomSurface()}');
+        }
+        break;
+      case PetType.dog:
+        if (random < 10) {
+          damageMarks.add('Chew marks on ${_getRandomItem()}');
+        }
+        break;
+      case PetType.bird:
+        if (random < 8) {
+          damageMarks.add('Droppings on ${_getRandomSurface()}');
+        }
+        break;
+      default:
+        if (random < 5) {
+          damageMarks.add('General wear on floor');
+        }
+    }
+    
+    // Limit damage marks to prevent infinite growth
+    if (damageMarks.length > 20) {
+      damageMarks.removeAt(0);
+    }
+  }
+  
+  String _getRandomSurface() {
+    final surfaces = ['wall', 'floor', 'furniture', 'door frame'];
+    final index = DateTime.now().millisecondsSinceEpoch % surfaces.length;
+    return surfaces[index];
+  }
+  
+  String _getRandomItem() {
+    if (items.isEmpty) return 'furniture';
+    final index = DateTime.now().millisecondsSinceEpoch % items.length;
+    return items[index].name;
+  }
+
   // Calculate happiness and comfort based on habitat conditions
   void calculateHappinessAndComfort() {
     // Base values from items
@@ -410,6 +515,15 @@ class PetHabitat {
     if (hasInteractiveElements) {
       happiness += interactiveElements.length * 3.0;
     }
+
+    // Factor in aging and wear
+    final wearPenalty = overallWear * 0.3; // Up to 30 point penalty
+    final moldPenalty = moldLevel * 2; // Up to 20 point penalty
+    final pestPenalty = hasPestInfestation ? 15 : 0;
+    final damagePenalty = damageMarks.length * 0.5; // 0.5 points per damage mark
+    
+    happiness -= (wearPenalty + moldPenalty + pestPenalty + damagePenalty);
+    comfort -= (wearPenalty + moldPenalty + pestPenalty);
 
     // Cap at 100
     happiness = happiness.clamp(0.0, 100.0);
@@ -461,18 +575,22 @@ class PetHabitat {
     };
   }
 
-  static String _getDefaultBackground(PetType type, HabitatTheme theme) {
-    // Default background based on pet type
-    return switch (type) {
-      PetType.lion => 'assets/images/habitats/savannah_background.png',
-      PetType.giraffe => 'assets/images/habitats/savannah_background.png',
-      PetType.penguin => 'assets/images/habitats/arctic_background.png',
-      PetType.panda => 'assets/images/habitats/bamboo_background.png',
-      PetType.dog => 'assets/images/habitats/house_background.png',
-      PetType.cat => 'assets/images/habitats/house_background.png',
-      PetType.bird => 'assets/images/habitats/forest_background.png',
-      PetType.rabbit => 'assets/images/habitats/garden_background.png',
-    };
+  static String? _getDefaultBackground(PetType type, HabitatTheme theme) {
+    // Background images are optional - return null if not available
+    // This allows the habitat renderer to use color-based backgrounds instead
+    return null; // Disable background images for now until assets are created
+
+    // Future implementation when assets are available:
+    // return switch (type) {
+    //   PetType.lion => 'assets/images/habitats/savannah_background.png',
+    //   PetType.giraffe => 'assets/images/habitats/savannah_background.png',
+    //   PetType.penguin => 'assets/images/habitats/arctic_background.png',
+    //   PetType.panda => 'assets/images/habitats/bamboo_background.png',
+    //   PetType.dog => 'assets/images/habitats/house_background.png',
+    //   PetType.cat => 'assets/images/habitats/house_background.png',
+    //   PetType.bird => 'assets/images/habitats/forest_background.png',
+    //   PetType.rabbit => 'assets/images/habitats/garden_background.png',
+    // };
   }
 
   // Public methods to access theme-related settings
@@ -484,7 +602,7 @@ class PetHabitat {
     return _getDefaultWallColor(theme);
   }
 
-  static String getBackgroundForPetAndTheme(PetType type, HabitatTheme theme) {
+  static String? getBackgroundForPetAndTheme(PetType type, HabitatTheme theme) {
     return _getDefaultBackground(type, theme);
   }
 
@@ -500,5 +618,118 @@ class PetHabitat {
       default:
         return WeatherType.sunny;
     }
+  }
+
+  // Maintenance and repair methods
+  void performMaintenance() {
+    final now = DateTime.now();
+    
+    // Reset aging factors
+    overallWear = (overallWear * 0.3).clamp(0.0, 100.0); // Reduce wear by 70%
+    moldLevel = (moldLevel * 0.1).clamp(0.0, 10.0); // Almost eliminate mold
+    hasPestInfestation = false; // Exterminate pests
+    daysWithoutCleaning = 0; // Reset cleaning counter
+    lastMaintenance = now;
+    
+    // Repair some damage marks (professional maintenance fixes most issues)
+    if (damageMarks.isNotEmpty) {
+      final marksToRepair = (damageMarks.length * 0.8).round(); // Repair 80% of damage
+      damageMarks.removeRange(0, marksToRepair.clamp(0, damageMarks.length));
+    }
+    
+    // Reset item wear
+    for (var itemType in itemWear.keys.toList()) {
+      itemWear[itemType] = (itemWear[itemType]! * 0.2).clamp(0.0, 100.0); // Restore items
+    }
+    
+    // Boost cleanliness
+    cleanliness = (cleanliness + 30).clamp(0.0, 100.0);
+    
+    print('🔧 Habitat maintenance complete: wear reduced, pests eliminated, damage repaired');
+  }
+
+  String getConditionDescription() {
+    final List<String> conditions = [];
+    
+    // Overall condition based on wear
+    if (overallWear > 80) {
+      conditions.add('severely worn and damaged');
+    } else if (overallWear > 60) {
+      conditions.add('showing significant wear');
+    } else if (overallWear > 40) {
+      conditions.add('moderately worn');
+    } else if (overallWear > 20) {
+      conditions.add('lightly worn');
+    } else {
+      conditions.add('in excellent condition');
+    }
+    
+    // Specific issues
+    if (moldLevel > 7) {
+      conditions.add('has severe mold problems');
+    } else if (moldLevel > 4) {
+      conditions.add('has noticeable mold growth');
+    } else if (moldLevel > 2) {
+      conditions.add('has minor mold spots');
+    }
+    
+    if (hasPestInfestation) {
+      conditions.add('has a pest infestation');
+    }
+    
+    if (damageMarks.length > 20) {
+      conditions.add('has extensive damage marks');
+    } else if (damageMarks.length > 10) {
+      conditions.add('has multiple damage marks');
+    } else if (damageMarks.length > 5) {
+      conditions.add('has some damage marks');
+    }
+    
+    if (daysWithoutCleaning > 14) {
+      conditions.add('desperately needs cleaning');
+    } else if (daysWithoutCleaning > 7) {
+      conditions.add('needs cleaning soon');
+    }
+    
+    return 'Habitat is ${conditions.join(', ')}.';
+  }
+
+  bool needsMaintenance() {
+    // Critical maintenance needed
+    if (overallWear > 70 || moldLevel > 6 || hasPestInfestation) {
+      return true;
+    }
+    
+    // Time-based maintenance (monthly recommended)
+    final daysSinceMaintenance = DateTime.now().difference(lastMaintenance).inDays;
+    if (daysSinceMaintenance > 30) {
+      return true;
+    }
+    
+    // High damage count requires attention
+    if (damageMarks.length > 15) {
+      return true;
+    }
+    
+    return false;
+  }
+
+  bool needsUrgentMaintenance() {
+    return overallWear > 85 || moldLevel > 8 || (hasPestInfestation && daysWithoutCleaning > 10);
+  }
+
+  double getMaintenanceCost() {
+    double baseCost = 50.0; // Base maintenance cost
+    
+    // Additional costs based on condition
+    baseCost += overallWear * 0.5; // Up to 50 extra for wear
+    baseCost += moldLevel * 5; // Up to 50 extra for mold
+    baseCost += damageMarks.length * 2; // 2 coins per damage mark
+    
+    if (hasPestInfestation) {
+      baseCost += 25; // Pest treatment cost
+    }
+    
+    return baseCost.round().toDouble();
   }
 }

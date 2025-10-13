@@ -1,7 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import '../models/pet.dart';
-import '../services/pet_sound_service.dart';
+import 'new_audio_service.dart';
 
 class PetInteractionManager {
   final Pet pet;

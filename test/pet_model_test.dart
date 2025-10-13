@@ -1,10 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ai_pet_companion/models/pet.dart';
 import 'package:flutter/material.dart';
-import 'package:ai_pet_companion/services/pet_sound_service.dart';
+import 'package:ai_pet_companion/services/new_audio_service.dart';
 
 void main() {
-  PetSoundService.testingMode = true;
+  NewAudioService.testingMode = true;
   group('Pet Model Tests', () {
     late Pet pet;
 

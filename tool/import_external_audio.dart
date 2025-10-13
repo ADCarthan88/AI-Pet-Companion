@@ -1,38 +1,34 @@
 // import_external_audio tool script
-library import_external_audio;
 
-/// Utility script to copy/normalize external animal sound files
-/// from a user-provided directory (outside repo) into the structured
-/// `assets/sounds/<species>/` directories.
-///
-/// Usage: 
-///   dart tool/import_external_audio.dart --source "C:/Users/adamc/animal-sounds" \
-///       --species dog --map happy=dog_happy1.mp3 sleep=dog_sleep.mp3
-///
-/// You can specify multiple --map entries or a YAML manifest instead:
-///   dart tool/import_external_audio.dart --source "C:/.../animal-sounds" --species dog \
-///       --manifest mapping.yaml
-///
-/// mapping.yaml example: 
-/// ```yaml
-/// dog:
-///   happy:
-///     - dog_happy1.mp3
-///     - dog_happy2.mp3
-///   sleep: dog_sleep.mp3
-/// cat:
-///   happy: cat_purr.mp3
-/// ```
-///
-/// The script will:
-/// 1. Verify source files exist.
-/// 2. Copy to assets/sounds/<species>/<action>[_N].mp3 (preserving numbering if variants).
-/// 3. Skip copy if destination identical size & modified not newer.
-/// 4. Print a summary of imported files.
-///
-/// After importing, run (if new folders added):
-///   flutter pub get 
-/// Then rebuild the app.
+// Utility script to copy/normalize external animal sound files
+// from a user-provided directory (outside repo) into the structured
+// `assets/sounds/<species>/` directories.
+// Usage:
+//   dart tool/import_external_audio.dart --source "C:/Users/adamc/animal-sounds" \
+//       --species dog --map happy=dog_happy1.mp3 sleep=dog_sleep.mp3
+//
+// You can specify multiple --map entries or a YAML manifest instead:
+//   dart tool/import_external_audio.dart --source "C:/.../animal-sounds" --species dog \
+//       --manifest mapping.yaml
+//
+// mapping.yaml example:
+// dog:
+//   happy:
+//     - dog_happy1.mp3
+//     - dog_happy2.mp3
+//   sleep: dog_sleep.mp3
+// cat:
+//   happy: cat_purr.mp3
+//
+// The script will:
+// 1. Verify source files exist.
+// 2. Copy to assets/sounds/<species>/<action>[_N].mp3 (preserving numbering if variants).
+// 3. Skip copy if destination identical size & modified not newer.
+// 4. Print a summary of imported files.
+//
+// After importing, if new folders added run:
+//   flutter pub get
+// Then rebuild the app.
 import 'dart:io';
 import 'package:yaml/yaml.dart';
 
@@ -65,7 +61,9 @@ void main(List<String> args) async {
           actions.forEach((action, value) {
             final list = <String>[];
             if (value is YamlList) {
-              for (final v in value) list.add(v.toString());
+              for (final v in value) {
+                list.add(v.toString());
+              }
             } else {
               list.add(value.toString());
             }
@@ -111,13 +109,13 @@ void main(List<String> args) async {
   int copied = 0;
   int skipped = 0;
 
-  for (final sp in mapping.keys) { 
+  for (final sp in mapping.keys) {
     final speciesDest = Directory('${destRoot.path}/$sp');
     if (!speciesDest.existsSync()) {
       speciesDest.createSync(recursive: true);
     }
     final actions = mapping[sp]!;
-    for (final action in actions.keys) {
+  for (final action in actions.keys) {
       final files = actions[action]!;
       for (int i = 0; i < files.length; i++) {
         final srcName = files[i];

@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
 import 'screens/home_screen.dart';
 import 'config/app_config.dart';
+import 'package:audioplayers/audioplayers.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // Enable test mode automatically in debug builds (assert only executes in debug)
+
   assert(() {
     AppConfig.testMode = true; // Infinite coins & relaxed constraints
     return true;
   }());
-  // In release, testMode remains false giving production starting coins.
-  // Initialize app
+  // Add audio logging
+  AudioLogger.logLevel = AudioLogLevel.info;
+  print('APP: Starting with audio logging enabled');
+
   runApp(const MyApp());
 }
 
@@ -22,10 +25,11 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'AI Pet Companion',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
+        primarySwatch: Colors.blue,
+        visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
       home: const HomeScreen(),
+      debugShowCheckedModeBanner: false,
     );
   }
 }

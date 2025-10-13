@@ -1,48 +1,32 @@
 import 'dart:async';
-import 'package:shared_preferences/shared_preferences.dart';
 
-/// Simple sound settings persistence placeholder.
-/// In a real app you'd use SharedPreferences or Hive. For now keeps in-memory.
 class SoundSettingsService {
-  static final SoundSettingsService _instance = SoundSettingsService._();
-  factory SoundSettingsService() => _instance;
-  SoundSettingsService._();
+  static bool _isMuted = false;
+  static double _volume = 1.0;
 
-  double _masterVolume = 1.0; // 0.0 - 1.0
-  bool _muted = false;
-  bool _loaded = false;
+  // All the getters your code needs
+  bool get isMuted => _isMuted;
+  bool get muted => _isMuted;
+  double get volume => _volume;
+  double get masterVolume => _volume;
+  double get effectiveVolume => _isMuted ? 0.0 : _volume;
 
-  final StreamController<void> _changes = StreamController.broadcast();
-  Stream<void> get changes => _changes.stream;
+  // Stream for changes (your pet_sound_service.dart expects this)
+  static final StreamController<void> _changesController =
+      StreamController<void>.broadcast();
+  Stream<void> get changes => _changesController.stream;
 
-  double get effectiveVolume => _muted ? 0.0 : _masterVolume;
-  double get masterVolume => _masterVolume;
-  bool get muted => _muted;
-
-  Future<void> ensureLoaded() async {
-    if (_loaded) return;
-    final prefs = await SharedPreferences.getInstance();
-    _masterVolume = prefs.getDouble('sound_master_volume') ?? 1.0;
-    _muted = prefs.getBool('sound_muted') ?? false;
-    _loaded = true;
-    _changes.add(null); // notify listeners of initial load
+  void setMuted(bool muted) {
+    _isMuted = muted;
+    _changesController.add(null);
   }
 
-  Future<void> setVolume(double v) async {
-    _masterVolume = v.clamp(0.0, 1.0);
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setDouble('sound_master_volume', _masterVolume);
-    _changes.add(null);
+  Future<void> setVolume(double volume) async {
+    _volume = volume.clamp(0.0, 1.0);
+    _changesController.add(null);
   }
 
-  Future<void> setMuted(bool value) async {
-    _muted = value;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('sound_muted', _muted);
-    _changes.add(null);
-  }
-
-  void dispose() {
-    _changes.close();
+  void ensureLoaded() {
+    // Placeholder for loading settings from storage
   }
 }

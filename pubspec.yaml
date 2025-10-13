@@ -76,6 +76,14 @@ flutter:
     - assets/animations/
     - assets/images/
     - assets/sounds/
+    - assets/sounds/cat/
+    - assets/sounds/dog/
+    - assets/sounds/bird/
+    - assets/sounds/giraffe/
+    - assets/sounds/lion/
+    - assets/sounds/panda/
+    - assets/sounds/penguin/
+    - assets/sounds/rabbit/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

@@ -3,16 +3,16 @@ import '../models/pet.dart';
 import '../models/store_item.dart';
 
 class PetOwnedItemsWidget extends StatelessWidget {
-  final Pet pet;
-  final Function(StoreItem) onItemSelected;
-  final StoreItem? activeItem;
-
   const PetOwnedItemsWidget({
-    Key? key,
+    super.key,
     required this.pet,
     required this.onItemSelected,
     this.activeItem,
-  }) : super(key: key);
+  });
+
+  final Pet pet;
+  final Function(StoreItem) onItemSelected;
+  final StoreItem? activeItem;
 
   @override
   Widget build(BuildContext context) {

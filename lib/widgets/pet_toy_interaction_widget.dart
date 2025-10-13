@@ -1,18 +1,20 @@
 import 'package:flutter/material.dart';
+import 'dart:math' as math;
 import '../models/pet.dart';
 import '../models/toy.dart';
+import '../services/badge_service.dart';
 
 class PetToyInteractionWidget extends StatefulWidget {
-  final Pet pet;
-  final Size screenSize;
-  final Function(Offset) onPositionChange;
-
   const PetToyInteractionWidget({
-    Key? key,
+    super.key,
     required this.pet,
     required this.screenSize,
     required this.onPositionChange,
-  }) : super(key: key);
+  });
+
+  final Pet pet;
+  final Size screenSize;
+  final Function(Offset) onPositionChange;
 
   @override
   State<PetToyInteractionWidget> createState() =>
@@ -24,6 +26,7 @@ class _PetToyInteractionWidgetState extends State<PetToyInteractionWidget>
   Offset _petPosition = Offset.zero;
   Offset? _targetPosition;
   late AnimationController _controller;
+  final List<_ToyParticle> _particles = [];
 
   @override
   void initState() {
@@ -80,6 +83,16 @@ class _PetToyInteractionWidgetState extends State<PetToyInteractionWidget>
               if (widget.pet.currentToy != null) {
                 setState(() {
                   widget.pet.currentToy!.throwPosition = null;
+                  BadgeService.instance.increment(
+                    'toy_play',
+                    threshold: 5,
+                    badgeId: 'Playtime Novice',
+                  );
+                  BadgeService.instance.increment(
+                    'toy_play',
+                    threshold: 20,
+                    badgeId: 'Playtime Pro',
+                  );
                 });
               }
             }
@@ -117,6 +130,25 @@ class _PetToyInteractionWidgetState extends State<PetToyInteractionWidget>
       _targetPosition = target;
       _controller.reset();
       _controller.forward();
+      // Spawn a small burst of particles when target reached soon (anticipatory)
+      _spawnParticles(target);
+    });
+  }
+
+  void _spawnParticles(Offset center) {
+    // Create 8 particles in random small radius
+    final rand = math.Random();
+    for (int i = 0; i < 8; i++) {
+      final dx = (rand.nextDouble() - 0.5) * 30;
+      final dy = (rand.nextDouble() - 0.5) * 30;
+      _particles.add(_ToyParticle(center + Offset(dx, dy)));
+    }
+    // Clean old particles after a frame
+    Future.delayed(const Duration(milliseconds: 700), () {
+      if (!mounted) return;
+      setState(() {
+        _particles.removeWhere((p) => p.opacity <= 0);
+      });
     });
   }
 
@@ -137,11 +169,19 @@ class _PetToyInteractionWidgetState extends State<PetToyInteractionWidget>
                 color: widget.pet.currentToy!.color,
                 shape: BoxShape.circle,
                 boxShadow: [
-                  BoxShadow(
+                  // Base shadow
+                  const BoxShadow(
                     color: Colors.black26,
                     blurRadius: 4,
-                    offset: const Offset(0, 2),
+                    offset: Offset(0, 2),
                   ),
+                  // Pulse highlight when pet is moving toward toy
+                  if (_targetPosition != null)
+                    BoxShadow(
+                      color: widget.pet.currentToy!.color.withValues(alpha: 0.7),
+                      blurRadius: 12 + (6 * _controller.value),
+                      spreadRadius: 2 + (2 * _controller.value),
+                    ),
                 ],
               ),
               child: Icon(
@@ -151,6 +191,25 @@ class _PetToyInteractionWidgetState extends State<PetToyInteractionWidget>
               ),
             ),
           ),
+        // Particles
+        ..._particles.map((p) => Positioned(
+              left: p.position.dx,
+              top: p.position.dy,
+              child: Opacity(
+                opacity: p.opacity,
+                child: Transform.scale(
+                  scale: p.scale,
+                  child: Container(
+                    width: 6,
+                    height: 6,
+                    decoration: BoxDecoration(
+                      color: widget.pet.currentToy?.color ?? Colors.white,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
+              ),
+            )),
       ],
     );
   }
@@ -177,3 +236,19 @@ class _PetToyInteractionWidgetState extends State<PetToyInteractionWidget>
     }
   }
 }
+
+class _ToyParticle {
+  _ToyParticle(this.position)
+      : created = DateTime.now(),
+        scale = 0.5 + math.Random().nextDouble() * 0.5;
+  Offset position;
+  final DateTime created;
+  double scale;
+  double get opacity {
+    final ageMs = DateTime.now().difference(created).inMilliseconds;
+    final life = 600; // ms
+    final remaining = (1 - (ageMs / life)).clamp(0.0, 1.0);
+    return remaining;
+  }
+}
+

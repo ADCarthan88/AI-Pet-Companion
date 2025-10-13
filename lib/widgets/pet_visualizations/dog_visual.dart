@@ -2,18 +2,18 @@ import 'package:flutter/material.dart';
 import '../../models/pet.dart';
 
 class DogVisual extends StatelessWidget {
-  final Pet pet;
-  final bool isBlinking;
-  final bool mouthOpen;
-  final double size;
-
   const DogVisual({
+    super.key,
     required this.pet,
     required this.isBlinking,
     required this.mouthOpen,
     required this.size,
-    Key? key,
-  }) : super(key: key);
+  });
+
+  final Pet pet;
+  final bool isBlinking;
+  final bool mouthOpen;
+  final double size;
 
   @override
   Widget build(BuildContext context) {
@@ -75,7 +75,7 @@ class DogVisual extends StatelessWidget {
 class _TonguePainter extends CustomPainter {
   final double progress;
 
-  _TonguePainter({required this.progress});
+  const _TonguePainter({required this.progress});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -259,16 +259,16 @@ class DogPainter extends CustomPainter {
       paint,
     );
 
-    // Snout
+    // Snout (reduced size and prominence)
     final snoutRect = Rect.fromLTWH(
+      size.width * 0.35,
+      size.height * 0.42,
       size.width * 0.3,
-      size.height * 0.4,
-      size.width * 0.4,
-      size.height * 0.3,
+      size.height * 0.2,
     );
     canvas.drawRRect(
-      RRect.fromRectAndRadius(snoutRect, Radius.circular(size.width * 0.15)),
-      darkPaint,
+      RRect.fromRectAndRadius(snoutRect, Radius.circular(size.width * 0.1)),
+      lightPaint, // Use lighter color instead of darker to make it less prominent
     );
 
     // Nose
@@ -304,19 +304,31 @@ class DogPainter extends CustomPainter {
       lightPaint,
     );
 
-    // Left ear
+    // Left ear (rounded floppy ear)
     final leftEarPath = Path()
       ..moveTo(size.width * 0.25, size.height * 0.25)
-      ..lineTo(size.width * 0.1, size.height * 0.1)
-      ..lineTo(size.width * 0.3, size.height * 0.2)
+      ..quadraticBezierTo(
+        size.width * 0.08, size.height * 0.12,  // Control point
+        size.width * 0.15, size.height * 0.18   // End point
+      )
+      ..quadraticBezierTo(
+        size.width * 0.22, size.height * 0.16,  // Control point
+        size.width * 0.3, size.height * 0.2     // End point
+      )
       ..close();
     canvas.drawPath(leftEarPath, darkPaint);
 
-    // Right ear
+    // Right ear (rounded floppy ear)
     final rightEarPath = Path()
       ..moveTo(size.width * 0.75, size.height * 0.25)
-      ..lineTo(size.width * 0.9, size.height * 0.1)
-      ..lineTo(size.width * 0.7, size.height * 0.2)
+      ..quadraticBezierTo(
+        size.width * 0.92, size.height * 0.12,  // Control point
+        size.width * 0.85, size.height * 0.18   // End point
+      )
+      ..quadraticBezierTo(
+        size.width * 0.78, size.height * 0.16,  // Control point
+        size.width * 0.7, size.height * 0.2     // End point
+      )
       ..close();
     canvas.drawPath(rightEarPath, darkPaint);
 

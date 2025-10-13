@@ -98,6 +98,9 @@ class PetRiveController {
       case PetActivity.beingBrushed:
         cleanTrigger?.fire();
         break;
+      case PetActivity.walking:
+        playTrigger?.fire(); // Use play animation for walking
+        break;
     }
   }
 

@@ -2,17 +2,17 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import '../models/weather_system.dart';
 import '../models/pet.dart';
-import 'pet_visualizations/pet_visualization_factory.dart';
+import 'pet_idle_animator.dart';
 
 class WeatherEffectsWidget extends StatelessWidget {
-  final WeatherType weatherType;
-  final Pet pet;
-
   const WeatherEffectsWidget({
-    Key? key,
+    super.key,
     required this.weatherType,
     required this.pet,
-  }) : super(key: key);
+  });
+
+  final WeatherType weatherType;
+  final Pet pet;
 
   @override
   Widget build(BuildContext context) {
@@ -44,11 +44,10 @@ class WeatherEffectsWidget extends StatelessWidget {
             child: SizedBox(
               width: 120,
               height: 120,
-              child: PetVisualizationFactory.getPetVisualization(
+              child: PetIdleAnimator(
                 pet: pet,
-                isBlinking: false,
-                mouthOpen: false,
-                size: 120,
+                baseSize: 120,
+                active: pet.currentActivity == PetActivity.idle,
               ),
             ),
           ),

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Audio Asset Test</title>
+</head>
+<body>
+    <h1>Audio Asset Accessibility Test</h1>
+    <div id="results"></div>
+    
+    <script>
+        const testPaths = [
+            'assets/sounds/dog/happy.mp3',
+            'sounds/dog/happy.mp3',
+            'assets/assets/sounds/dog/happy.mp3'
+        ];
+        
+        const results = document.getElementById('results');
+        
+        testPaths.forEach(async (path, index) => {
+            const div = document.createElement('div');
+            div.innerHTML = `<p>Testing path: ${path}</p>`;
+            results.appendChild(div);
+            
+            try {
+                const response = await fetch(path);
+                div.innerHTML += `<p style="color: ${response.ok ? 'green' : 'red'}">
+                    Status: ${response.status} - ${response.ok ? 'SUCCESS' : 'FAILED'}
+                </p>`;
+            } catch (error) {
+                div.innerHTML += `<p style="color: red">Error: ${error.message}</p>`;
+            }
+        });
+    </script>
+</body>
+</html>

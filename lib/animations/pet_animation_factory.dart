@@ -7,7 +7,11 @@ import '../models/pet.dart';
 class GenericPetAnimation extends StatefulWidget {
   final Pet pet;
   final Function(PetActivity) onActivityChanged;
-  const GenericPetAnimation({super.key, required this.pet, required this.onActivityChanged});
+  const GenericPetAnimation({
+    super.key,
+    required this.pet,
+    required this.onActivityChanged,
+  });
 
   @override
   State<GenericPetAnimation> createState() => _GenericPetAnimationState();
@@ -21,7 +25,10 @@ class _GenericPetAnimationState extends State<GenericPetAnimation>
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(vsync: this, duration: const Duration(seconds: 3))..repeat(reverse: true);
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 3),
+    )..repeat(reverse: true);
     _breath = CurvedAnimation(parent: _controller, curve: Curves.easeInOut);
   }
 
@@ -38,10 +45,7 @@ class _GenericPetAnimationState extends State<GenericPetAnimation>
       animation: _breath,
       builder: (context, child) {
         final scale = 1 + (_breath.value * 0.04);
-        return Transform.scale(
-          scale: scale,
-          child: child,
-        );
+        return Transform.scale(scale: scale, child: child);
       },
       child: _buildPetShape(widget.pet),
     );
@@ -49,7 +53,7 @@ class _GenericPetAnimationState extends State<GenericPetAnimation>
 
   Widget _buildPetShape(Pet pet) {
     // Very lightweight placeholder visualization using shape + icon.
-  final shapeColor = pet.color.withValues(alpha: 0.85);
+    final shapeColor = pet.color.withValues(alpha: 0.85);
     IconData icon;
     switch (pet.type) {
       case PetType.dog:
@@ -88,7 +92,7 @@ class _GenericPetAnimationState extends State<GenericPetAnimation>
             color: Colors.black.withValues(alpha: 0.25),
             blurRadius: 12,
             offset: const Offset(0, 6),
-          )
+          ),
         ],
       ),
       alignment: Alignment.center,

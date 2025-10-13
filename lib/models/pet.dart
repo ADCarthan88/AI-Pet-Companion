@@ -8,6 +8,12 @@ import 'weather_system.dart';
 import 'mini_game.dart';
 import 'pet_social.dart';
 import 'store_item.dart';
+import 'emotional_memory.dart';
+import '../services/ai_response_engine.dart';
+import '../services/realistic_behavior_engine.dart';
+import '../services/interactive_response_service.dart';
+import '../services/context_aware_interaction.dart';
+import '../services/natural_movement_engine.dart';
 
 enum PetType { dog, cat, bird, rabbit, lion, giraffe, penguin, panda }
 
@@ -22,6 +28,7 @@ enum PetActivity {
   licking,
   beingCleaned,
   beingBrushed,
+  walking,
 }
 
 enum PetGender { male, female }
@@ -35,6 +42,10 @@ class Pet {
   int cleanliness;
   PetMood mood;
   PetActivity currentActivity;
+  
+  // Temporary mood system to preserve immediate reactions
+  PetMood? _temporaryMood;
+  DateTime? _temporaryMoodSet;
   PetGender gender;
   Color color;
   DateTime lastFed;
@@ -51,6 +62,14 @@ class Pet {
   WeatherType preferredWeather;
   List<MiniGame> unlockedGames;
   PetSocialProfile? socialProfile;
+  EmotionalMemory emotionalMemory;
+  
+  // AI Enhancement Systems
+  AIResponseEngine? _aiResponseEngine;
+  RealisticBehaviorEngine? _behaviorEngine;
+  InteractiveResponseService? _interactiveService;
+  ContextAwareInteraction? _contextAwareSystem;
+  NaturalMovementEngine? _movementEngine;
 
   Pet({
     required this.name,
@@ -77,7 +96,8 @@ class Pet {
            : AppConfig.defaultStartingCoins,
        inventory = [],
        ownedItems = [],
-       activeItem = null {
+       activeItem = null,
+       emotionalMemory = EmotionalMemory() {
     // Initialize habitat with colors instead of background images
     habitat = PetHabitat(
       petType: type,
@@ -102,6 +122,9 @@ class Pet {
 
     // Initialize available tricks
     tricks.addAll(PetTrick.getTricksForPetType(type));
+    
+    // Initialize AI enhancement systems
+    _initializeAISystems();
   }
 
   // Track timers for cleanup (especially in tests)
@@ -112,6 +135,38 @@ class Pet {
       t.cancel();
     }
     _timers.clear();
+    
+    // Dispose AI systems
+    _aiResponseEngine?.dispose();
+    _behaviorEngine?.dispose();
+    _interactiveService?.dispose();
+    _contextAwareSystem?.dispose();
+    _movementEngine?.dispose();
+  }
+  
+  /// Initialize AI enhancement systems
+  void _initializeAISystems() {
+    _aiResponseEngine = AIResponseEngine(pet: this);
+    _behaviorEngine = RealisticBehaviorEngine(pet: this);
+    _interactiveService = InteractiveResponseService(pet: this);
+    _contextAwareSystem = ContextAwareInteraction(pet: this);
+    _movementEngine = NaturalMovementEngine(pet: this);
+    
+    print('🤖 AI Systems initialized for ${name}');
+  }
+
+  // Set a temporary mood that persists for a short time
+  void _setTemporaryMood(PetMood newMood) {
+    _temporaryMood = newMood;
+    _temporaryMoodSet = DateTime.now();
+    mood = newMood;
+    print('✨ INTERACTION: Pet feels $newMood!');
+  }
+  
+  // Check if temporary mood should be cleared
+  bool _shouldClearTemporaryMood() {
+    if (_temporaryMood == null || _temporaryMoodSet == null) return false;
+    return DateTime.now().difference(_temporaryMoodSet!).inSeconds > 10; // Clear after 10 seconds
   }
 
   // Create a basic bed for the given pet type
@@ -209,6 +264,9 @@ class Pet {
     final timeSinceLastFed = now.difference(lastFed);
     final timeSinceLastCleaned = now.difference(lastCleaned);
 
+    // Store previous mood for comparison
+    final previousMood = mood;
+
     // Increase hunger over time
     if (timeSinceLastFed.inHours >= 2) {
       hunger = (hunger + 10).clamp(0, 100);
@@ -224,26 +282,58 @@ class Pet {
     // Update pet based on habitat conditions
     updateWithHabitat();
 
-    // Update mood based on stats and award coins
-    if (happiness > 75 && energy > 50 && cleanliness > 70) {
-      mood = PetMood.loving;
-      if (!isLicking && currentActivity == PetActivity.idle) {
-        startLicking();
+    // Apply emotional memory modifiers to stats
+    final emotionalModifiers = emotionalMemory.getEmotionalStatModifiers();
+    happiness = (happiness + (emotionalModifiers['happiness'] ?? 0.0)).clamp(0, 100).round();
+    
+    // Apply stress and loneliness if we had those stats (for future expansion)
+    // For now, high stress reduces happiness, low loneliness increases happiness
+    final stressReduction = (emotionalModifiers['stress'] ?? 0.0) * -0.5; // Convert stress to happiness reduction
+    final lonelinessReduction = (emotionalModifiers['loneliness'] ?? 0.0) * -1.0; // Convert loneliness reduction to happiness increase
+    happiness = (happiness + stressReduction + lonelinessReduction).clamp(0, 100).round();
+
+    // Clear temporary mood if expired
+    if (_shouldClearTemporaryMood()) {
+      _temporaryMood = null;
+      _temporaryMoodSet = null;
+    }
+    
+    // Update mood based on stats (but don't override temporary mood)
+    if (_temporaryMood == null) {
+      if (happiness > 75 && energy > 50 && cleanliness > 70) {
+        mood = PetMood.loving;
+        if (!isLicking && currentActivity == PetActivity.idle) {
+          startLicking();
+        }
+        // Bonus coins for excellent care
+        earnCoins(2.0);
+      } else if (happiness > 75 && energy > 50) {
+        mood = PetMood.happy;
+        // Small bonus for good care
+        earnCoins(1.0);
+      } else if (hunger > 75 || cleanliness < 30) {
+        mood = PetMood.sad;
+      } else if (energy < 25) {
+        mood = PetMood.tired;
+      } else {
+        mood = PetMood.neutral;
+        // Small reward for stable condition
+        earnCoins(0.5);
       }
-      // Bonus coins for excellent care
-      earnCoins(2.0);
-    } else if (happiness > 75 && energy > 50) {
-      mood = PetMood.happy;
-      // Small bonus for good care
-      earnCoins(1.0);
-    } else if (hunger > 75 || cleanliness < 30) {
-      mood = PetMood.sad;
-    } else if (energy < 25) {
-      mood = PetMood.tired;
     } else {
-      mood = PetMood.neutral;
-      // Small reward for stable condition
-      earnCoins(0.5);
+      // Still award coins based on stats
+      if (happiness > 75 && energy > 50 && cleanliness > 70) {
+        earnCoins(2.0);
+      } else if (happiness > 75 && energy > 50) {
+        earnCoins(1.0);
+      } else {
+        earnCoins(0.5);
+      }
+    }
+
+    // Log significant mood changes
+    if (previousMood != mood) {
+      print('🐾 PET MOOD: $previousMood → $mood');
     }
 
     // Extra coins for consistent care
@@ -266,6 +356,21 @@ class Pet {
     lastFed = DateTime.now();
     currentActivity = PetActivity.eating;
 
+    // Immediate mood reaction to feeding
+    _setTemporaryMood(PetMood.happy);
+
+    // Record emotional memory with enhanced context
+    final context = hunger > 80 ? EmotionalContext.grateful : // Starving = grateful
+                   hunger > 70 ? EmotionalContext.bonding : // Very hungry = special care
+                   hunger > 40 ? EmotionalContext.positive : // Moderately hungry = good timing
+                   hunger > 20 ? EmotionalContext.neutral : // Not very hungry = routine
+                   EmotionalContext.melancholy; // Force feeding = sad
+    final intensity = hunger > 70 ? (isSnack ? 0.5 : 0.8) : // More memorable when hungry
+                     isSnack ? 0.3 : 0.6; // Regular intensity otherwise
+    final notes = isSnack ? 'Given healthy snack' : 'Fed full meal';
+    emotionalMemory.recordInteraction(InteractionType.feeding, context, 
+        intensity: intensity, notes: notes);
+
     // Update habitat food status when feeding the pet
     if (habitat != null) {
       // Replenish food in habitat
@@ -274,6 +379,12 @@ class Pet {
       // Decrease cleanliness slightly from eating
       habitat!.updateCleanliness(-5);
     }
+    
+    // Trigger AI response to feeding with context awareness
+    _aiResponseEngine?.recordUserInteraction(InteractionType.feeding);
+    final contextualInfo = _contextAwareSystem?.processContextualInteraction(
+        InteractionType.feeding, {'hunger_level': hunger, 'is_snack': isSnack});
+    _interactiveService?.processInteraction(InteractionType.feeding, context: contextualInfo);
 
     updateState();
   }
@@ -295,15 +406,32 @@ class Pet {
   }
 
   void clean() {
+    final previousCleanliness = cleanliness;
     cleanliness = 100;
     happiness = (happiness + 10).clamp(0, 100);
     lastCleaned = DateTime.now();
     currentActivity = PetActivity.beingCleaned;
 
+    // Immediate mood reaction to cleaning
+    _setTemporaryMood(PetMood.loving);
+
+    // Record emotional memory - cleaning context depends on how dirty the pet was
+    final context = previousCleanliness < 30 ? EmotionalContext.bonding : // Very dirty = caring gesture
+                   previousCleanliness < 60 ? EmotionalContext.positive : // Moderately dirty = good care
+                   EmotionalContext.neutral; // Clean = routine maintenance
+    final intensity = previousCleanliness < 30 ? 0.8 : 0.5; // More memorable when really needed
+    emotionalMemory.recordInteraction(InteractionType.cleaning, context, intensity: intensity);
+
     // Also clean the habitat when cleaning the pet
     if (habitat != null) {
       habitat!.clean();
     }
+    
+    // Trigger AI response to cleaning with context awareness
+    _aiResponseEngine?.recordUserInteraction(InteractionType.cleaning);
+    final contextualInfo = _contextAwareSystem?.processContextualInteraction(
+        InteractionType.cleaning, {'previous_cleanliness': previousCleanliness});
+    _interactiveService?.processInteraction(InteractionType.cleaning, context: contextualInfo);
 
     updateState();
   }
@@ -313,6 +441,128 @@ class Pet {
     happiness = (happiness + 15).clamp(0, 100);
     lastBrushed = DateTime.now();
     currentActivity = PetActivity.beingBrushed;
+    
+    // Immediate mood reaction to brushing
+    _setTemporaryMood(PetMood.loving);
+    
+    // Record emotional memory - brushing with sensitivity awareness
+    final daysSinceBrush = DateTime.now().difference(lastBrushed).inDays;
+    final context = daysSinceBrush > 5 ? EmotionalContext.grateful : // Very overdue = grateful
+                   daysSinceBrush > 3 ? EmotionalContext.bonding : // Long overdue = special care
+                   emotionalMemory.sensitivity > 70 ? EmotionalContext.bonding : // Sensitive pets love gentle care
+                   EmotionalContext.positive; // Regular brushing = good care
+    final intensity = emotionalMemory.sensitivity > 70 ? 0.8 : // Sensitive pets find it more meaningful
+                     daysSinceBrush > 3 ? 0.9 : 0.6; // More memorable when needed
+    final notes = emotionalMemory.sensitivity > 70 ? 'Gentle, caring brushing session' : 
+                 daysSinceBrush > 3 ? 'Much-needed grooming care' : 'Regular brushing';
+    emotionalMemory.recordInteraction(InteractionType.brushing, context, 
+        intensity: intensity, notes: notes);
+    
+    updateState();
+  }
+
+  // New emotional interaction methods
+  void gentleTouch({String location = 'head'}) {
+    cleanliness = (cleanliness + 5).clamp(0, 100);
+    happiness = (happiness + 8).clamp(0, 100);
+    
+    // Immediate mood reaction to gentle touching
+    _setTemporaryMood(PetMood.loving);
+    
+    // Record emotional memory - gentle touch is usually bonding
+    final context = emotionalMemory.sensitivity > 70 ? EmotionalContext.grateful :
+                   emotionalMemory.attachment > 60 ? EmotionalContext.bonding :
+                   EmotionalContext.positive;
+    final intensity = emotionalMemory.sensitivity > 70 ? 0.9 : 0.7;
+    emotionalMemory.recordInteraction(InteractionType.gentleTouch, context, 
+        intensity: intensity, notes: 'Gentle touch on $location');
+    
+    // Trigger AI response to gentle touch with context awareness
+    _aiResponseEngine?.recordUserInteraction(InteractionType.gentleTouch);
+    final contextualInfo = _contextAwareSystem?.processContextualInteraction(
+        InteractionType.gentleTouch, {'location': location, 'sensitivity': emotionalMemory.sensitivity});
+    _interactiveService?.processInteraction(InteractionType.gentleTouch, context: contextualInfo);
+    
+    print('💖 GENTLE TOUCH: $name feels cherished after gentle $location touching');
+    updateState();
+  }
+  
+  void talkToPet(String message) {
+    happiness = (happiness + 5).clamp(0, 100);
+    
+    // Immediate mood reaction
+    _setTemporaryMood(PetMood.happy);
+    
+    // Record emotional memory - talking builds social connection
+    final context = emotionalMemory.socialability > 70 ? EmotionalContext.joyful :
+                   emotionalMemory.bondStrength > 60 ? EmotionalContext.bonding :
+                   EmotionalContext.positive;
+    final intensity = emotionalMemory.personalityExtroversion > 60 ? 0.8 : 0.5;
+    emotionalMemory.recordInteraction(InteractionType.talking, context, 
+        intensity: intensity, notes: 'Talked to pet: "$message"');
+    
+    print('🗣️ TALKING: $name enjoys hearing your voice');
+    updateState();
+  }
+  
+  void giveSurpriseGift(String giftType) {
+    happiness = (happiness + 15).clamp(0, 100);
+    energy = (energy + 10).clamp(0, 100);
+    
+    // Immediate mood reaction
+    _setTemporaryMood(PetMood.excited);
+    
+    // Record emotional memory - surprise gifts are special bonding moments
+    final context = emotionalMemory.curiosity > 60 ? EmotionalContext.joyful :
+                   EmotionalContext.bonding;
+    final intensity = 0.9; // Always memorable
+    emotionalMemory.recordInteraction(InteractionType.surpriseGift, context, 
+        intensity: intensity, notes: 'Surprise gift: $giftType');
+    
+    print('🎁 SURPRISE GIFT: $name is delighted with the $giftType!');
+    updateState();
+  }
+  
+  void comfortPet() {
+    // Only effective if pet is sad, stressed, or traumatized
+    if (mood == PetMood.sad || emotionalMemory.traumaLevel > 30) {
+      happiness = (happiness + 12).clamp(0, 100);
+      
+      // Immediate mood reaction
+      _setTemporaryMood(PetMood.loving);
+      
+      // Record emotional memory - comforting during distress is deeply bonding
+      final context = emotionalMemory.traumaLevel > 50 ? EmotionalContext.grateful :
+                     EmotionalContext.bonding;
+      final intensity = emotionalMemory.traumaLevel > 50 ? 1.0 : 0.8;
+      emotionalMemory.recordInteraction(InteractionType.comforting, context, 
+          intensity: intensity, notes: 'Comforted during difficult time');
+      
+      print('🤗 COMFORT: $name feels deeply cared for during this difficult moment');
+    } else {
+      happiness = (happiness + 3).clamp(0, 100);
+      emotionalMemory.recordInteraction(InteractionType.comforting, EmotionalContext.positive, 
+          intensity: 0.4, notes: 'Gentle comfort');
+      print('🤗 COMFORT: $name appreciates the gentle comfort');
+    }
+    
+    updateState();
+  }
+  
+  void celebrateWithPet(String occasion) {
+    happiness = (happiness + 20).clamp(0, 100);
+    energy = (energy + 15).clamp(0, 100);
+    
+    // Immediate mood reaction
+    _setTemporaryMood(PetMood.excited);
+    
+    // Record emotional memory - celebrations are joyful bonding experiences
+    final context = EmotionalContext.joyful;
+    final intensity = 0.9;
+    emotionalMemory.recordInteraction(InteractionType.celebrating, context, 
+        intensity: intensity, notes: 'Celebrated $occasion together');
+    
+    print('🎉 CELEBRATION: $name is overjoyed celebrating $occasion with you!');
     updateState();
   }
 
@@ -418,6 +668,29 @@ class Pet {
       happiness = (happiness + happinessBoost).clamp(0, 100);
       energy = (energy - energyCost).clamp(0, 100);
       currentActivity = PetActivity.playing;
+      
+      // Immediate mood reaction to playing
+      mood = PetMood.excited;
+      print('PET DEBUG: Pet played - immediate mood set to excited');
+      
+      // Record emotional memory - playing with personality awareness
+      final context = energy < 30 ? EmotionalContext.stressful : // Too tired = not enjoyable
+                     happinessBoost > 25 && emotionalMemory.playfulness > 70 ? EmotionalContext.joyful : // Playful pet + great conditions = joy
+                     happinessBoost > 25 ? EmotionalContext.bonding : // Great habitat = special fun
+                     emotionalMemory.playfulness > 60 ? EmotionalContext.playful : // Playful pet = playful context
+                     EmotionalContext.positive; // Normal play = good time
+      final intensity = emotionalMemory.playfulness > 70 ? 0.9 : // Highly playful pets love playing more
+                       happinessBoost > 25 ? 0.8 : 0.6; // Better habitat = more memorable
+      final notes = happinessBoost > 25 ? 'Played in excellent habitat conditions' : 'Regular play session';
+      emotionalMemory.recordInteraction(InteractionType.playing, context, 
+          intensity: intensity, notes: notes);
+      
+      // Trigger AI response to playing with context awareness
+      _aiResponseEngine?.recordUserInteraction(InteractionType.playing);
+      final contextualInfo = _contextAwareSystem?.processContextualInteraction(
+          InteractionType.playing, {'happiness_boost': happinessBoost, 'energy_cost': energyCost});
+      _interactiveService?.processInteraction(InteractionType.playing, context: contextualInfo);
+      
       updateState();
     }
   }
@@ -523,6 +796,9 @@ class Pet {
       100,
     ); // Playing with appropriate toy gives more happiness
     currentActivity = PetActivity.playingWithToy;
+    
+    // Immediate mood reaction to playing
+    _setTemporaryMood(PetMood.excited);
 
     // Establish a starting position so it can render even if not thrown.
     if (throwPosition != null) {
@@ -588,6 +864,10 @@ class Pet {
         }
         break;
     }
+
+    // Immediate mood reaction to playing with toys
+    mood = PetMood.excited;
+    print('PET DEBUG: Pet playing with toy - immediate mood set to excited');
 
     updateState();
   }
@@ -710,7 +990,10 @@ class Pet {
   void updateWithHabitat() {
     if (habitat == null) return;
 
-    // Recalculate habitat conditions
+    // Update habitat aging based on pet behavior and time
+    habitat!.updateAging();
+
+    // Recalculate habitat conditions (includes aging effects)
     habitat!.calculateHappinessAndComfort();
 
     // Habitat cleanliness affects pet cleanliness
@@ -862,4 +1145,63 @@ class Pet {
         hasGoodConditions &&
         hasInteractivity;
   }
+
+  // Emotional Memory access methods
+  String getEmotionalState() => emotionalMemory.getEmotionalStateDescription();
+  
+  List<String> getBehavioralRecommendations() => emotionalMemory.getBehavioralRecommendations();
+  
+  InteractionType? getFavoriteActivity() => emotionalMemory.getFavoriteInteraction();
+  
+  InteractionType? getLeastFavoriteActivity() => emotionalMemory.getLeastFavoriteInteraction();
+  
+  double getTrustLevel() => emotionalMemory.trustLevel;
+  
+  double getBondStrength() => emotionalMemory.bondStrength;
+  
+  bool isReceptiveToActivity(InteractionType activity) => emotionalMemory.isReceptiveToInteraction(activity);
+
+  // Habitat maintenance access methods
+  String getHabitatCondition() => habitat?.getConditionDescription() ?? 'No habitat';
+  
+  bool habitatNeedsMaintenance() => habitat?.needsMaintenance() ?? false;
+  
+  bool habitatNeedsUrgentMaintenance() => habitat?.needsUrgentMaintenance() ?? false;
+  
+  double getHabitatMaintenanceCost() => habitat?.getMaintenanceCost() ?? 0.0;
+  
+  void performHabitatMaintenance() {
+    if (habitat != null && canAfford(getHabitatMaintenanceCost())) {
+      coins -= getHabitatMaintenanceCost();
+      habitat!.performMaintenance();
+      
+      // Record positive emotional memory for habitat maintenance
+      emotionalMemory.recordInteraction(
+        InteractionType.cleaning, 
+        EmotionalContext.bonding, 
+        intensity: 0.7,
+        notes: 'Habitat maintenance performed'
+      );
+      
+      happiness = (happiness + 20).clamp(0, 100);
+      updateState();
+    }
+  }
+  
+  /// Get contextual recommendations from AI system
+  List<String> getContextualRecommendations() {
+    return _contextAwareSystem?.getContextualRecommendations() ?? [];
+  }
+  
+  /// Get current context summary
+  Map<String, dynamic> getContextSummary() {
+    return _contextAwareSystem?.getContextSummary() ?? {};
+  }
+  
+  /// Get AI systems for external access (used by widgets)
+  AIResponseEngine? get aiResponseEngine => _aiResponseEngine;
+  RealisticBehaviorEngine? get behaviorEngine => _behaviorEngine;
+  InteractiveResponseService? get interactiveService => _interactiveService;
+  ContextAwareInteraction? get contextAwareSystem => _contextAwareSystem;
+  NaturalMovementEngine? get movementEngine => _movementEngine;
 }

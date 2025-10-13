@@ -3,16 +3,16 @@ import 'dart:math' as math;
 import '../models/pet.dart';
 
 class PettingDetectorWidget extends StatefulWidget {
-  final Pet pet;
-  final Widget child;
-  final Function(bool isPetting) onPetting;
-
   const PettingDetectorWidget({
-    Key? key,
+    super.key,
     required this.pet,
     required this.child,
     required this.onPetting,
-  }) : super(key: key);
+  });
+
+  final Pet pet;
+  final Widget child;
+  final Function(bool isPetting) onPetting;
 
   @override
   State<PettingDetectorWidget> createState() => _PettingDetectorWidgetState();

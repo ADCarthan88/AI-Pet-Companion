@@ -3,10 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:ai_pet_companion/models/pet.dart';
 import 'package:ai_pet_companion/models/pet_habitat.dart';
 import 'package:ai_pet_companion/models/toy.dart';
-import 'package:ai_pet_companion/services/pet_sound_service.dart';
+import 'package:ai_pet_companion/services/new_audio_service.dart';
 
 void main() {
-  PetSoundService.testingMode = true;
+  NewAudioService.testingMode = true;
   group('Toy play & feeding habitat integration', () {
     late Pet pet;
     late Toy ball;
@@ -32,7 +32,11 @@ void main() {
       expect(ball.throwPosition, isNull);
       pet.playWithToy(ball); // no throwPosition argument
       expect(pet.currentToy, equals(ball));
-      expect(ball.throwPosition, isNotNull, reason: 'Default position should be assigned');
+      expect(
+        ball.throwPosition,
+        isNotNull,
+        reason: 'Default position should be assigned',
+      );
     });
 
     test('feed() toggles habitat hasFood and reduces hunger', () {
